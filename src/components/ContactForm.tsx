@@ -19,7 +19,7 @@ export default function ContactForm({
   onCancel,
   saving,
 }: Props) {
-  const [form] = Form.useForm<Contact>();
+  const [form] = Form.useForm<Partial<Contact>>();
 
   useEffect(() => {
     form.setFieldsValue(initial);
