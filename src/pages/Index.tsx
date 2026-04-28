@@ -1,16 +1,100 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Tabs } from "antd";
+import { useCallback, useEffect, useState } from "react";
+import AppHeader from "@/components/AppHeader";
+import ContactList from "@/components/ContactList";
+import ContactDetail from "@/components/ContactDetail";
+import AddNewScreen from "@/components/AddNewScreen";
+import {
+  deleteContact,
+  getAllContacts,
+  putContact,
+  type Contact,
+} from "@/lib/contactsDb";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [tab, setTab] = useState<string>("list");
+  const [selected, setSelected] = useState<Contact | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const refresh = useCallback(async () => {
+    const all = await getAllContacts();
+    setContacts(all);
+    if (selected) {
+      const updated = all.find((c) => c.id === selected.id) ?? null;
+      setSelected(updated);
+    }
+  }, [selected]);
+
+  useEffect(() => {
+    void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    document.title = "Contact Capture";
+  }, []);
+
+  const handleSelect = (c: Contact) => {
+    setSelected(c);
+    setDetailOpen(true);
+  };
+
+  const handleSave = async (c: Contact) => {
+    await putContact(c);
+    await refresh();
+    setSelected(c);
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteContact(id);
+    setSelected(null);
+    setDetailOpen(false);
+    await refresh();
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="cc-app">
+      <AppHeader />
+      <main className="cc-container">
+        <Tabs
+          activeKey={tab}
+          onChange={setTab}
+          items={[
+            {
+              key: "list",
+              label: `All Contacts${contacts.length ? ` (${contacts.length})` : ""}`,
+              children: (
+                <ContactList
+                  contacts={contacts}
+                  onSelect={handleSelect}
+                  onAddNew={() => setTab("add")}
+                />
+              ),
+            },
+            {
+              key: "add",
+              label: "Add New",
+              children: (
+                <AddNewScreen
+                  onSaved={() => void refresh()}
+                  onViewList={() => setTab("list")}
+                />
+              ),
+            },
+          ]}
+        />
+      </main>
+
+      <ContactDetail
+        open={detailOpen}
+        contact={selected}
+        onClose={() => setDetailOpen(false)}
+        onSave={handleSave}
+        onDelete={handleDelete}
+      />
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
