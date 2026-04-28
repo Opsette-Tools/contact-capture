@@ -10,15 +10,16 @@ import {
 } from "@/lib/contactsDb";
 
 interface Props {
-  value?: string; // event id
-  onChange: (eventId: string | undefined, event: Event | undefined) => void;
+  value?: string; // event id (injected by Form.Item)
+  onChange?: (eventId: string | undefined) => void; // injected by Form.Item
+  onEventPicked?: (event: Event | undefined) => void;
   refreshKey?: number;
 }
 
 const NEW_VALUE = "__new__";
 const NONE_VALUE = "__none__";
 
-export default function EventSelect({ value, onChange, refreshKey }: Props) {
+export default function EventSelect({ value, onChange, onEventPicked, refreshKey }: Props) {
   const [events, setEvents] = useState<Event[]>([]);
   const [creating, setCreating] = useState(false);
   const [form] = Form.useForm();
