@@ -48,11 +48,13 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
       return;
     }
     if (val === NONE_VALUE) {
-      onChange(undefined, undefined);
+      onChange?.(undefined);
+      onEventPicked?.(undefined);
       return;
     }
     const ev = events.find((e) => e.id === val);
-    onChange(val, ev);
+    onChange?.(val);
+    onEventPicked?.(ev);
   };
 
   const handleCreate = async () => {
@@ -68,7 +70,8 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
     await load();
     setCreating(false);
     form.resetFields();
-    onChange(ev.id, ev);
+    onChange?.(ev.id);
+    onEventPicked?.(ev);
   };
 
   return (

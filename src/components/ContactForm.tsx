@@ -44,9 +44,8 @@ export default function ContactForm({
     }
   }, [prefill, form]);
 
-  const handleEventChange = (eventId: string | undefined, ev: Event | undefined) => {
+  const handleEventPicked = (ev: Event | undefined) => {
     form.setFieldsValue({
-      eventId,
       eventName: ev?.name,
       // Auto-fill the meet date from the event date if user hasn't set one yet.
       metDate:
@@ -99,10 +98,7 @@ export default function ContactForm({
       </Form.Item>
 
       <Form.Item label="Event" name="eventId">
-        <EventSelect
-          value={form.getFieldValue("eventId")}
-          onChange={handleEventChange}
-        />
+        <EventSelect onEventPicked={handleEventPicked} />
       </Form.Item>
       <Form.Item name="eventName" hidden>
         <Input />
