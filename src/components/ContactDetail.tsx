@@ -75,6 +75,8 @@ export default function ContactDetail({ open, contact, onClose, onSave, onDelete
           <Field label="Company" value={contact.company} />
           <Field label="Email" value={contact.email} />
           <Field label="Phone" value={contact.phone} />
+          <Field label="Event" value={contact.eventName ?? ""} />
+          <Field label="Date met" value={contact.metDate ?? ""} />
           <Field label="Where you met" value={contact.metAt} />
           <Field label="Memorable detail" value={contact.memorableDetail} />
           <Field label="Follow-up" value={contact.followUp} />
