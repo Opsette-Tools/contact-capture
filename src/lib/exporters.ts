@@ -1,4 +1,4 @@
-import type { Contact, Event } from "./contactsDb";
+import type { Contact } from "./contactsDb";
 
 function csvEscape(value: string | undefined): string {
   const v = value ?? "";
