@@ -103,7 +103,3 @@ export function exportContactsVcard(contacts: Contact[]) {
   const blob = new Blob([body], { type: "text/vcard;charset=utf-8" });
   downloadBlob(blob, `contacts-${timestamp()}.vcf`);
 }
-
-export function _eventsUnused(_e: Event[]) {
-  // placeholder so Event type stays exported usable elsewhere
-}
