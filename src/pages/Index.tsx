@@ -4,6 +4,7 @@ import AppHeader from "@/components/AppHeader";
 import ContactList from "@/components/ContactList";
 import ContactDetail from "@/components/ContactDetail";
 import AddNewScreen from "@/components/AddNewScreen";
+import EventsTab from "@/components/EventsTab";
 import {
   deleteContact,
   getAllContacts,
@@ -81,6 +82,11 @@ const Index = () => {
                   onViewList={() => setTab("list")}
                 />
               ),
+            },
+            {
+              key: "events",
+              label: "Events",
+              children: <EventsTab />,
             },
           ]}
         />

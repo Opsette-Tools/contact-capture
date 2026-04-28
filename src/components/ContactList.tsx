@@ -1,7 +1,8 @@
-import { SearchOutlined, UserOutlined } from "@ant-design/icons";
-import { Avatar, Empty, Input, List, Tag } from "antd";
+import { DownloadOutlined, SearchOutlined, UserOutlined } from "@ant-design/icons";
+import { Avatar, Button, Dropdown, Empty, Input, List, Tag } from "antd";
 import { useMemo, useState } from "react";
 import type { Contact, ContactTag } from "@/lib/contactsDb";
+import { exportContactsCsv, exportContactsVcard } from "@/lib/exporters";
 import { tagColors } from "@/lib/theme";
 import TagBadge from "./TagBadge";
 
@@ -38,14 +39,27 @@ export default function ContactList({ contacts, onSelect, onAddNew }: Props) {
 
   return (
     <div className="cc-stack">
-      <Input
-        size="large"
-        allowClear
-        placeholder="Search name, company, email"
-        prefix={<SearchOutlined />}
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      <div className="cc-row" style={{ gap: 8 }}>
+        <Input
+          size="large"
+          allowClear
+          placeholder="Search name, company, email"
+          prefix={<SearchOutlined />}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <Dropdown
+          disabled={contacts.length === 0}
+          menu={{
+            items: [
+              { key: "csv", label: "Export as CSV", onClick: () => exportContactsCsv(contacts) },
+              { key: "vcf", label: "Export as vCard (.vcf)", onClick: () => exportContactsVcard(contacts) },
+            ],
+          }}
+        >
+          <Button size="large" icon={<DownloadOutlined />} aria-label="Export contacts" />
+        </Dropdown>
+      </div>
       <div className="cc-filter-row">
         {TAG_OPTIONS.map((t) => {
           const active = tagFilter === t;

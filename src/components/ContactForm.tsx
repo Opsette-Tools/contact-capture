@@ -1,6 +1,8 @@
-import { Button, Form, Input, Select, Space } from "antd";
+import { Button, DatePicker, Form, Input, Select, Space } from "antd";
+import dayjs from "dayjs";
 import { useEffect } from "react";
-import type { Contact, ContactTag } from "@/lib/contactsDb";
+import type { Contact, ContactTag, Event } from "@/lib/contactsDb";
+import EventSelect from "./EventSelect";
 
 interface Props {
   initial: Contact;
@@ -11,6 +13,10 @@ interface Props {
   saving?: boolean;
 }
 
+interface FormValues extends Omit<Partial<Contact>, "metDate"> {
+  metDate?: dayjs.Dayjs | null;
+}
+
 export default function ContactForm({
   initial,
   prefill,
@@ -19,24 +25,48 @@ export default function ContactForm({
   onCancel,
   saving,
 }: Props) {
-  const [form] = Form.useForm<Partial<Contact>>();
+  const [form] = Form.useForm<FormValues>();
 
   useEffect(() => {
-    form.setFieldsValue(initial);
+    form.setFieldsValue({
+      ...initial,
+      metDate: initial.metDate ? dayjs(initial.metDate) : null,
+    });
   }, [initial, form]);
 
   useEffect(() => {
     if (prefill) {
-      form.setFieldsValue({ ...form.getFieldsValue(), ...prefill });
+      form.setFieldsValue({
+        ...form.getFieldsValue(),
+        ...prefill,
+        metDate: prefill.metDate ? dayjs(prefill.metDate) : form.getFieldValue("metDate"),
+      });
     }
   }, [prefill, form]);
 
-  const handleFinish = async (values: Partial<Contact>) => {
+  const handleEventChange = (eventId: string | undefined, ev: Event | undefined) => {
+    form.setFieldsValue({
+      eventId,
+      eventName: ev?.name,
+      // Auto-fill the meet date from the event date if user hasn't set one yet.
+      metDate:
+        ev?.date && !form.getFieldValue("metDate")
+          ? dayjs(ev.date)
+          : form.getFieldValue("metDate"),
+      // If location is empty, suggest the event location as the "where you met" detail.
+      metAt: form.getFieldValue("metAt") || ev?.location || "",
+    });
+  };
+
+  const handleFinish = async (values: FormValues) => {
     const merged: Contact = {
       ...initial,
       ...values,
+      metDate: values.metDate ? values.metDate.format("YYYY-MM-DD") : undefined,
+      eventId: values.eventId || undefined,
+      eventName: values.eventName || undefined,
       updatedAt: Date.now(),
-    };
+    } as Contact;
     await onSubmit(merged);
   };
 
@@ -44,7 +74,10 @@ export default function ContactForm({
     <Form
       form={form}
       layout="vertical"
-      initialValues={initial}
+      initialValues={{
+        ...initial,
+        metDate: initial.metDate ? dayjs(initial.metDate) : null,
+      }}
       onFinish={handleFinish}
       requiredMark={false}
     >
@@ -64,9 +97,23 @@ export default function ContactForm({
       <Form.Item label="Phone" name="phone">
         <Input placeholder="+1 555 123 4567" autoComplete="off" />
       </Form.Item>
-      <Form.Item label="Where you met" name="metAt">
-        <Input placeholder="Conference, coffee shop, etc." autoComplete="off" />
+
+      <Form.Item label="Event" name="eventId">
+        <EventSelect
+          value={form.getFieldValue("eventId")}
+          onChange={handleEventChange}
+        />
       </Form.Item>
+      <Form.Item name="eventName" hidden>
+        <Input />
+      </Form.Item>
+      <Form.Item label="Date met" name="metDate">
+        <DatePicker style={{ width: "100%" }} format="MMM D, YYYY" />
+      </Form.Item>
+      <Form.Item label="Where you met (extra detail)" name="metAt">
+        <Input placeholder="By the bar, after the keynote…" autoComplete="off" />
+      </Form.Item>
+
       <Form.Item label="Memorable detail" name="memorableDetail">
         <Input.TextArea rows={3} placeholder="Something you want to remember about them" />
       </Form.Item>
