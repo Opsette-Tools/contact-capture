@@ -1,7 +1,7 @@
 import { Drawer, Grid, Tabs } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AppHeader from "@/components/AppHeader";
+import { OpsetteHeader } from "@/components/opsette-header";
 import BottomNav, { type BottomNavKey } from "@/components/BottomNav";
 import ContactList from "@/components/ContactList";
 import ContactDetail from "@/components/ContactDetail";
@@ -95,7 +95,7 @@ const Index = () => {
 
   return (
     <div className="cc-app">
-      <AppHeader />
+      <OpsetteHeader />
       <main className="cc-container">
         {isMobile ? (
           tab === "list" ? listView : eventsView

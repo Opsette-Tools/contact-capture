@@ -10,7 +10,7 @@
   color: #2f4f46;
   cursor: pointer;
   padding: 0;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .ops-share-trigger:hover {
   background: rgba(47, 79, 70, 0.06);
@@ -19,6 +19,24 @@
 .ops-share-trigger:focus-visible {
   outline: 2px solid #426f62;
   outline-offset: 2px;
+}
+
+/* Dark mode: gold replaces green on the trigger, matching the brand-icon
+ * shift in _shared/opsette-header/header.css. Two selectors so it works in
+ * both AntD-wrapped contexts (the header carries data-theme="dark") and
+ * shadcn-wrapped contexts (html.dark is set by the host app's theme hook). */
+.ops-header[data-theme="dark"] .ops-share-trigger,
+html.dark .ops-share-trigger {
+  color: #cfae60;
+}
+.ops-header[data-theme="dark"] .ops-share-trigger:hover,
+html.dark .ops-share-trigger:hover {
+  background: rgba(207, 174, 96, 0.10);
+  border-color: rgba(207, 174, 96, 0.28);
+}
+.ops-header[data-theme="dark"] .ops-share-trigger:focus-visible,
+html.dark .ops-share-trigger:focus-visible {
+  outline-color: #cfae60;
 }
 
 .ops-share-overlay {
