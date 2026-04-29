@@ -3,6 +3,7 @@ import { Button, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import { OpsetteFooterLogo } from "@/components/opsette-share";
 import { OpsetteHeader } from "@/components/opsette-header";
+import { ThemeToggleButton } from "@/components/ThemeToggleButton";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -10,7 +11,7 @@ export default function About() {
   const navigate = useNavigate();
   return (
     <div className="cc-app">
-      <OpsetteHeader />
+      <OpsetteHeader rightExtra={<ThemeToggleButton />} />
 
       <main className="cc-container">
         <Button

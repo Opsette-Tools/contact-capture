@@ -18,6 +18,19 @@
   --cc-header-h: 56px;
 }
 
+/* Dark variants — values match the canonical palette in HEADER_BAR.md
+ * (page #000, surface #141414, border #303030, fg #fafafa, muted #a3a3a3). */
+.dark {
+  --cc-color-bg: #000000;
+  --cc-color-surface: #141414;
+  --cc-color-border: #303030;
+  --cc-color-border-soft: #1f1f1f;
+  --cc-color-text: #fafafa;
+  --cc-color-text-muted: #a3a3a3;
+  --cc-color-primary: #e5e7eb;
+  --cc-color-accent: #60a5fa;
+}
+
 html,
 body,
 #root {
@@ -244,7 +257,7 @@ body {
 }
 
 .cc-list-item:hover {
-  background: #f3f4f6;
+  background: var(--cc-color-border-soft);
 }
 
 .cc-detail-field {

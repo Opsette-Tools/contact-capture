@@ -5,15 +5,21 @@
  * exact class names; only the surrounding shell differs. See HEADER_BAR.md.
  */
 
-/* Background, foreground, and border inherit from the host app's shadcn-style
- * --card / --card-foreground / --border tokens so the header reads as a
- * surface continuous with the app it sits inside. Apps whose :root carries
- * dark values get a dark header automatically; apps with a .dark toggle on
- * <html> flip the header along with everything else; apps with no tokens at
- * all (e.g. AntD shells) fall back to the light defaults below. AntD apps
- * still use the data-theme="dark" attribute selector further down to drive
- * dark mode, since they don't ship shadcn tokens. */
+/* The header inherits surface tokens (--card / --card-foreground / --border)
+ * from the host app, so a shadcn app that sets html.dark or bakes dark values
+ * into :root automatically gets a dark header. AntD apps don't ship shadcn
+ * tokens, so they explicitly set data-theme="dark" on the <header> element
+ * (see the override block below) which pins the canonical dark palette.
+ *
+ * --ops-header-accent is the brand-icon / share-trigger color and ships with
+ * green as the default. Both dark scopes (html.dark and data-theme="dark")
+ * override it to gold. Apps with baked-dark :root only need to set the
+ * variable on :root; no detection logic in the bundle. */
 .ops-header {
+  --ops-header-accent: #2f4f46;
+  --ops-header-accent-hover-bg: rgba(47, 79, 70, 0.06);
+  --ops-header-accent-hover-border: rgba(47, 79, 70, 0.18);
+
   position: sticky;
   top: 0;
   z-index: 100;
@@ -70,7 +76,7 @@
   flex: 0 0 auto;
   width: 24px;
   height: 24px;
-  color: #2f4f46;       /* Phosphor SVGs use currentColor */
+  color: var(--ops-header-accent);
 }
 .ops-header-name {
   margin: 0;
@@ -97,25 +103,29 @@
   flex: 0 0 auto;
 }
 
-/* Dark mode override for AntD apps that don't ship shadcn tokens.
+/* --- Dark scopes ----------------------------------------------------------
  *
- * shadcn apps drive dark mode through --card / --card-foreground / --border
- * tokens (either baked into :root or flipped on <html class="dark">), so the
- * default rules above already paint correctly in dark mode for them. AntD
- * shells have no shadcn token layer, so they explicitly set data-theme="dark"
- * on the <header> and these rules pin the canonical dark palette
- * (#141414 surface / #303030 border / #fafafa foreground), matching the
- * process-checklist canary signed off in HEADER_BAR.md.
+ * The variable cascade does the work: each dark scope just overrides the
+ * three accent variables, and any descendant element using them
+ * (.ops-header-icon, .ops-share-trigger via share.css) flips automatically.
  *
- * The brand icon AND the share button trigger both shift to Opsette gold
- * (#cfae60) in dark mode — the "brand icon stays #2f4f46 across surfaces"
- * rule applies to standalone surfaces (favicon, OG, landing card); in the
- * header cluster they're functional UI in one surface and theme-shift
- * together. Matches the parent Opsette app's dark-mode behavior and the
- * gold-on-dark-green OG card pattern documented in ICONS_AND_BRANDING.md. */
+ * 1. html.dark — set by shadcn apps with a dark-mode toggle hook.
+ * 2. data-theme="dark" on <header> — set by AntD apps that don't ship
+ *    shadcn tokens; this scope ALSO pins the canonical dark surface palette
+ *    (#141414 bg / #fafafa fg / #303030 border) since AntD apps have no
+ *    --card token to inherit.
+ * 3. Apps with dark values baked into :root (no toggle) just declare the
+ *    accent variable on their own :root selector — no bundle change needed.
+ */
+html.dark .ops-header,
+.ops-header[data-theme="dark"] {
+  --ops-header-accent: #cfae60;
+  --ops-header-accent-hover-bg: rgba(207, 174, 96, 0.10);
+  --ops-header-accent-hover-border: rgba(207, 174, 96, 0.28);
+}
+
 .ops-header[data-theme="dark"] {
   background: #141414;
   color: #fafafa;
   border-bottom-color: #303030;
 }
-.ops-header[data-theme="dark"] .ops-header-icon { color: #cfae60; }
