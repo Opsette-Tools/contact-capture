@@ -35,12 +35,13 @@ export function exportContactsCsv(contacts: Contact[]) {
     "Company",
     "Email",
     "Phone",
+    "Website",
     "Event",
     "Met date",
     "Where you met",
     "Memorable detail",
     "Follow-up",
-    "Tag",
+    "Tags",
     "Created",
     "Updated",
   ];
@@ -50,12 +51,13 @@ export function exportContactsCsv(contacts: Contact[]) {
       c.company,
       c.email,
       c.phone,
+      c.website ?? "",
       c.eventName ?? "",
       c.metDate ?? "",
       c.metAt,
       c.memorableDetail,
       c.followUp,
-      c.tag,
+      c.tags.join("; "),
       new Date(c.createdAt).toISOString(),
       new Date(c.updatedAt).toISOString(),
     ]
@@ -87,6 +89,10 @@ export function contactToVcard(c: Contact): string {
   if (c.company) lines.push(`ORG:${vcardEscape(c.company)}`);
   if (c.email) lines.push(`EMAIL;TYPE=INTERNET:${vcardEscape(c.email)}`);
   if (c.phone) lines.push(`TEL;TYPE=CELL:${vcardEscape(c.phone)}`);
+  if (c.website) {
+    const url = /^https?:\/\//i.test(c.website) ? c.website : `https://${c.website}`;
+    lines.push(`URL:${vcardEscape(url)}`);
+  }
 
   const noteParts: string[] = [];
   if (c.eventName) noteParts.push(`Event: ${c.eventName}`);
@@ -94,9 +100,11 @@ export function contactToVcard(c: Contact): string {
   if (c.metAt) noteParts.push(`Where: ${c.metAt}`);
   if (c.memorableDetail) noteParts.push(`Detail: ${c.memorableDetail}`);
   if (c.followUp) noteParts.push(`Follow-up: ${c.followUp}`);
-  noteParts.push(`Tag: ${c.tag}`);
+  if (c.tags.length > 0) noteParts.push(`Tags: ${c.tags.join(", ")}`);
   lines.push(`NOTE:${vcardEscape(noteParts.join(" | "))}`);
-  lines.push(`CATEGORIES:${vcardEscape(c.tag)}`);
+  if (c.tags.length > 0) {
+    lines.push(`CATEGORIES:${c.tags.map(vcardEscape).join(",")}`);
+  }
   lines.push(`REV:${new Date(c.updatedAt).toISOString()}`);
   lines.push("END:VCARD");
   return lines.join("\r\n");

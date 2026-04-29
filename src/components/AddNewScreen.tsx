@@ -31,6 +31,7 @@ export default function AddNewScreen({ onSaved, onViewList }: Props) {
       company: parsed.company,
       email: parsed.email,
       phone: parsed.phone,
+      website: parsed.website,
     });
     setStep("form");
   };

@@ -74,13 +74,18 @@ export default function ContactDetail({ open, contact, onClose, onSave, onDelete
         />
       ) : (
         <div>
-          <div style={{ marginBottom: 16 }}>
-            <TagBadge tag={contact.tag} />
-          </div>
+          {contact.tags.length > 0 && (
+            <div style={{ marginBottom: 16, display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {contact.tags.map((t) => (
+                <TagBadge key={t} tag={t} />
+              ))}
+            </div>
+          )}
           <Field label="Name" value={contact.name} />
           <Field label="Company" value={contact.company} />
           <Field label="Email" value={contact.email} />
           <Field label="Phone" value={contact.phone} />
+          <Field label="Website" value={contact.website ?? ""} />
           <Field label="Event" value={contact.eventName ?? ""} />
           <Field label="Date met" value={contact.metDate ?? ""} />
           <Field label="Where you met" value={contact.metAt} />

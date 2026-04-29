@@ -2,7 +2,8 @@ import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, DatePicker, Form, Input, Select, Space } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import type { Contact, ContactTag, Event } from "@/lib/contactsDb";
+import type { Contact, Event } from "@/lib/contactsDb";
+import { TAG_SUGGESTIONS } from "@/lib/contactsDb";
 import EventSelect from "./EventSelect";
 
 interface Props {
@@ -70,9 +71,19 @@ export default function ContactForm({
   };
 
   const handleFinish = async (values: FormValues) => {
+    const cleanedTags = Array.isArray(values.tags)
+      ? Array.from(
+          new Set(
+            values.tags
+              .map((t) => (typeof t === "string" ? t.trim() : ""))
+              .filter((t) => t.length > 0),
+          ),
+        )
+      : [];
     const merged: Contact = {
       ...initial,
       ...values,
+      tags: cleanedTags,
       metDate: values.metDate ? values.metDate.format("YYYY-MM-DD") : undefined,
       eventId: values.eventId || undefined,
       eventName: values.eventName || undefined,
@@ -107,6 +118,9 @@ export default function ContactForm({
       </Form.Item>
       <Form.Item label="Phone" name="phone">
         <Input placeholder="+1 555 123 4567" autoComplete="off" />
+      </Form.Item>
+      <Form.Item label="Website" name="website">
+        <Input placeholder="acme.com" autoComplete="off" />
       </Form.Item>
 
       {/* Event is optional — hidden by default behind a link, expands inline when clicked. */}
@@ -162,13 +176,13 @@ export default function ContactForm({
       <Form.Item label="Follow-up action" name="followUp">
         <Input placeholder="Send portfolio, schedule call…" autoComplete="off" />
       </Form.Item>
-      <Form.Item label="Tag" name="tag">
-        <Select<ContactTag>
-          options={[
-            { value: "Hot", label: "Hot" },
-            { value: "Maybe", label: "Maybe" },
-            { value: "Friend", label: "Friend" },
-          ]}
+      <Form.Item label="Tags" name="tags">
+        <Select<string[]>
+          mode="tags"
+          allowClear
+          placeholder="Type a tag and press Enter"
+          tokenSeparators={[","]}
+          options={TAG_SUGGESTIONS.map((t) => ({ value: t, label: t }))}
         />
       </Form.Item>
       <Space>

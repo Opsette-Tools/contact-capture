@@ -1,6 +1,12 @@
 import { openDB, type IDBPDatabase } from "idb";
 
-export type ContactTag = "Hot" | "Maybe" | "Friend";
+export const TAG_SUGGESTIONS = [
+  "Lead",
+  "Client",
+  "Partner",
+  "Connection",
+  "Investor",
+] as const;
 
 export interface Event {
   id: string;
@@ -18,6 +24,7 @@ export interface Contact {
   company: string;
   email: string;
   phone: string;
+  website: string;
   /** Free-form, optional. Kept for backward compat & extra context (e.g. "by the bar"). */
   metAt: string;
   /** ID of linked event, if any. */
@@ -28,7 +35,8 @@ export interface Contact {
   metDate?: string;
   memorableDetail: string;
   followUp: string;
-  tag: ContactTag;
+  /** Free-form tags. Replaces the older single `tag` field. */
+  tags: string[];
   createdAt: number;
   updatedAt: number;
 }
@@ -56,15 +64,57 @@ function getDb() {
   return dbPromise;
 }
 
+/**
+ * Bring older records up to the current Contact shape.
+ * - Maps the legacy single `tag` ("Hot" | "Maybe" | "Friend") to the new `tags` array.
+ *   "Hot" → "Lead", "Maybe"/"Friend" → "Connection". Custom strings pass through.
+ * - Defaults missing string fields to "".
+ */
+function migrateContact(raw: unknown): Contact {
+  const r = (raw ?? {}) as Record<string, unknown> & {
+    tag?: string;
+    tags?: unknown;
+  };
+  let tags: string[] = [];
+  if (Array.isArray(r.tags)) {
+    tags = r.tags.filter((t): t is string => typeof t === "string" && t.trim() !== "");
+  } else if (typeof r.tag === "string" && r.tag.trim() !== "") {
+    const legacy = r.tag.trim();
+    if (legacy === "Hot") tags = ["Lead"];
+    else if (legacy === "Maybe" || legacy === "Friend") tags = ["Connection"];
+    else tags = [legacy];
+  }
+  return {
+    id: String(r.id ?? crypto.randomUUID()),
+    name: String(r.name ?? ""),
+    company: String(r.company ?? ""),
+    email: String(r.email ?? ""),
+    phone: String(r.phone ?? ""),
+    website: String(r.website ?? ""),
+    metAt: String(r.metAt ?? ""),
+    eventId: typeof r.eventId === "string" ? r.eventId : undefined,
+    eventName: typeof r.eventName === "string" ? r.eventName : undefined,
+    metDate: typeof r.metDate === "string" ? r.metDate : undefined,
+    memorableDetail: String(r.memorableDetail ?? ""),
+    followUp: String(r.followUp ?? ""),
+    tags,
+    createdAt: typeof r.createdAt === "number" ? r.createdAt : Date.now(),
+    updatedAt: typeof r.updatedAt === "number" ? r.updatedAt : Date.now(),
+  };
+}
+
 export async function getAllContacts(): Promise<Contact[]> {
   const db = await getDb();
-  const all = (await db.getAll(STORE)) as Contact[];
-  return all.sort((a, b) => b.updatedAt - a.updatedAt);
+  const all = (await db.getAll(STORE)) as unknown[];
+  return all
+    .map(migrateContact)
+    .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
 export async function getContact(id: string): Promise<Contact | undefined> {
   const db = await getDb();
-  return (await db.get(STORE, id)) as Contact | undefined;
+  const raw = await db.get(STORE, id);
+  return raw ? migrateContact(raw) : undefined;
 }
 
 export async function putContact(contact: Contact): Promise<void> {
@@ -85,13 +135,14 @@ export function newContact(): Contact {
     company: "",
     email: "",
     phone: "",
+    website: "",
     metAt: "",
     eventId: undefined,
     eventName: undefined,
     metDate: undefined,
     memorableDetail: "",
     followUp: "",
-    tag: "Maybe",
+    tags: [],
     createdAt: now,
     updatedAt: now,
   };

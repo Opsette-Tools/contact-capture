@@ -13,9 +13,6 @@ export const colors = {
   border: "#E5E7EB",
   textMuted: "#6B7280",
   avatarBg: "#1F2937",
-  tagHot: "#DC2626",
-  tagMaybe: "#3B82F6",
-  tagFriend: "#16A34A",
 } as const;
 
 export const antTheme: ThemeConfig = {
@@ -42,8 +39,30 @@ export const antTheme: ThemeConfig = {
   },
 };
 
-export const tagColors: Record<string, string> = {
-  Hot: "red",
-  Maybe: "blue",
-  Friend: "green",
+// antd Tag preset colors. We map well-known suggested tags to specific colors,
+// and hash any other (free-form) tag onto one of the remaining presets so the
+// same custom tag always renders in the same color.
+const KNOWN_TAG_COLORS: Record<string, string> = {
+  Lead: "green",
+  Client: "blue",
+  Partner: "purple",
+  Connection: "default",
+  Investor: "gold",
 };
+
+const FALLBACK_TAG_PALETTE = [
+  "magenta",
+  "volcano",
+  "orange",
+  "lime",
+  "cyan",
+  "geekblue",
+];
+
+export function colorForTag(tag: string): string {
+  const known = KNOWN_TAG_COLORS[tag];
+  if (known) return known;
+  let hash = 0;
+  for (let i = 0; i < tag.length; i++) hash = (hash * 31 + tag.charCodeAt(i)) | 0;
+  return FALLBACK_TAG_PALETTE[Math.abs(hash) % FALLBACK_TAG_PALETTE.length];
+}
