@@ -5,6 +5,14 @@
  * exact class names; only the surrounding shell differs. See HEADER_BAR.md.
  */
 
+/* Background, foreground, and border inherit from the host app's shadcn-style
+ * --card / --card-foreground / --border tokens so the header reads as a
+ * surface continuous with the app it sits inside. Apps whose :root carries
+ * dark values get a dark header automatically; apps with a .dark toggle on
+ * <html> flip the header along with everything else; apps with no tokens at
+ * all (e.g. AntD shells) fall back to the light defaults below. AntD apps
+ * still use the data-theme="dark" attribute selector further down to drive
+ * dark mode, since they don't ship shadcn tokens. */
 .ops-header {
   position: sticky;
   top: 0;
@@ -14,8 +22,9 @@
   gap: 16px;
   height: 60px;
   padding: 0 20px;
-  background: #fafafa;
-  border-bottom: 1px solid #EAEAEA;
+  background: hsl(var(--card, 0 0% 98%));
+  color: hsl(var(--card-foreground, 0 0% 10%));
+  border-bottom: 1px solid hsl(var(--border, 0 0% 92%));
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   box-sizing: border-box;
 }
@@ -70,7 +79,7 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1;
-  color: #1a1a1a;
+  color: inherit;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -88,7 +97,16 @@
   flex: 0 0 auto;
 }
 
-/* Dark mode (AntD apps that support it).
+/* Dark mode override for AntD apps that don't ship shadcn tokens.
+ *
+ * shadcn apps drive dark mode through --card / --card-foreground / --border
+ * tokens (either baked into :root or flipped on <html class="dark">), so the
+ * default rules above already paint correctly in dark mode for them. AntD
+ * shells have no shadcn token layer, so they explicitly set data-theme="dark"
+ * on the <header> and these rules pin the canonical dark palette
+ * (#141414 surface / #303030 border / #fafafa foreground), matching the
+ * process-checklist canary signed off in HEADER_BAR.md.
+ *
  * The brand icon AND the share button trigger both shift to Opsette gold
  * (#cfae60) in dark mode — the "brand icon stays #2f4f46 across surfaces"
  * rule applies to standalone surfaces (favicon, OG, landing card); in the
@@ -97,7 +115,7 @@
  * gold-on-dark-green OG card pattern documented in ICONS_AND_BRANDING.md. */
 .ops-header[data-theme="dark"] {
   background: #141414;
+  color: #fafafa;
   border-bottom-color: #303030;
 }
-.ops-header[data-theme="dark"] .ops-header-name { color: #fafafa; }
 .ops-header[data-theme="dark"] .ops-header-icon { color: #cfae60; }
