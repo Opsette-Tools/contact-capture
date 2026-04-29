@@ -70,9 +70,9 @@ export default function AddNewScreen({ onSaved, onViewList }: Props) {
 
   return (
     <div className="cc-stack" style={{ textAlign: "center", paddingTop: 24 }}>
-      <CheckCircleOutlined style={{ fontSize: 48, color: "#16A34A" }} />
+      <CheckCircleOutlined style={{ fontSize: 48, color: "var(--cc-color-accent)" }} />
       <h2 style={{ margin: 0 }}>Saved!</h2>
-      <p style={{ color: "#7a6f5a", margin: 0 }}>
+      <p style={{ color: "var(--cc-color-text-muted)", margin: 0 }}>
         Your contact is stored on this device.
       </p>
       <Space className="cc-success-actions" style={{ justifyContent: "center" }}>

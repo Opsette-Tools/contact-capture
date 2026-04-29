@@ -1,7 +1,8 @@
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { Button, Drawer, Modal, Popconfirm, Space } from "antd";
+import { DeleteOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
+import { Button, Drawer, Popconfirm, Space, message } from "antd";
 import { useState } from "react";
 import type { Contact } from "@/lib/contactsDb";
+import { exportSingleVcard } from "@/lib/exporters";
 import ContactForm from "./ContactForm";
 import TagBadge from "./TagBadge";
 
@@ -30,6 +31,11 @@ export default function ContactDetail({ open, contact, onClose, onSave, onDelete
   const handleClose = () => {
     setEditing(false);
     onClose();
+  };
+
+  const handleSaveToPhone = (c: Contact) => {
+    exportSingleVcard(c);
+    message.success("vCard downloaded — open it to add to your phone's Contacts");
   };
 
   return (
@@ -81,6 +87,16 @@ export default function ContactDetail({ open, contact, onClose, onSave, onDelete
           <Field label="Memorable detail" value={contact.memorableDetail} />
           <Field label="Follow-up" value={contact.followUp} />
 
+          <Button
+            type="primary"
+            icon={<DownloadOutlined />}
+            block
+            style={{ marginTop: 16 }}
+            onClick={() => handleSaveToPhone(contact)}
+          >
+            Save to phone
+          </Button>
+
           <Popconfirm
             title="Delete this contact?"
             description="This cannot be undone."
@@ -91,7 +107,7 @@ export default function ContactDetail({ open, contact, onClose, onSave, onDelete
               handleClose();
             }}
           >
-            <Button danger icon={<DeleteOutlined />} block style={{ marginTop: 16 }}>
+            <Button danger icon={<DeleteOutlined />} block style={{ marginTop: 12 }}>
               Delete contact
             </Button>
           </Popconfirm>

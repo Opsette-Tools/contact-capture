@@ -40,7 +40,7 @@ export default function CardScanner({ onParsed, onSkip }: Props) {
             style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 12 }}
           />
         )}
-        <div style={{ marginBottom: 12, color: "#7a6f5a" }}>
+        <div className="cc-scanner-hint">
           Take a photo or upload a business card. We'll prefill the fields.
         </div>
         <Upload

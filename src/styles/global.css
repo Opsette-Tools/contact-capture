@@ -1,8 +1,21 @@
 :root {
   --cc-page-max: 560px;
+  --cc-desktop-max: 880px;
   --cc-space-sm: 8px;
   --cc-space-md: 16px;
   --cc-space-lg: 24px;
+
+  --cc-color-bg: #f8f9fb;
+  --cc-color-surface: #ffffff;
+  --cc-color-border: #e5e7eb;
+  --cc-color-border-soft: #f1f3f5;
+  --cc-color-text: #111827;
+  --cc-color-text-muted: #6b7280;
+  --cc-color-primary: #1f2937;
+  --cc-color-accent: #3b82f6;
+
+  --cc-bottom-nav-h: 64px;
+  --cc-header-h: 56px;
 }
 
 html,
@@ -13,26 +26,58 @@ body,
 }
 
 body {
-  background: #faf7f2;
+  background: var(--cc-color-bg);
+  color: var(--cc-color-text);
   -webkit-font-smoothing: antialiased;
 }
 
+/* ---------- Shell ---------- */
+
 .cc-app {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
+}
+
+/* Reserve space for the fixed bottom nav on mobile only. */
+@media (max-width: 767px) {
+  .cc-app {
+    padding-bottom: calc(var(--cc-bottom-nav-h) + env(safe-area-inset-bottom));
+  }
 }
 
 .cc-header {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: #ffffff;
-  border-bottom: 1px solid #f0e9dc;
-  padding: 12px var(--cc-space-md);
+  background: var(--cc-color-surface);
+  border-bottom: 1px solid var(--cc-color-border-soft);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  min-height: var(--cc-header-h);
+}
+
+.cc-header-inner {
+  max-width: var(--cc-desktop-max);
+  margin: 0 auto;
+  padding: 10px var(--cc-space-md);
   display: flex;
   align-items: center;
   gap: 10px;
+  position: relative;
+}
+
+/* Desktop: center the title block horizontally; share button stays pinned right. */
+@media (min-width: 768px) {
+  .cc-header-inner {
+    justify-content: center;
+  }
+  .cc-header-actions {
+    position: absolute;
+    right: var(--cc-space-md);
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 0;
+  }
 }
 
 .cc-header-title {
@@ -40,18 +85,26 @@ body {
   font-weight: 600;
   margin: 0;
   letter-spacing: -0.01em;
+  color: var(--cc-color-text);
 }
 
 .cc-header-icon {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: #f59e0b;
+  background: var(--cc-color-primary);
   color: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
+}
+
+.cc-header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .cc-container {
@@ -61,6 +114,97 @@ body {
   padding: var(--cc-space-md);
   flex: 1;
 }
+
+/* Desktop: wrap the main content in a framed card so it isn't lost in white space. */
+@media (min-width: 768px) {
+  .cc-container {
+    max-width: var(--cc-desktop-max);
+    background: var(--cc-color-surface);
+    border: 1px solid var(--cc-color-border-soft);
+    border-radius: 14px;
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.03);
+    padding: 24px 32px;
+    margin-top: 24px;
+    margin-bottom: 24px;
+    flex: 0 0 auto;
+  }
+}
+
+/* ---------- Bottom nav ---------- */
+
+.cc-bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  background: var(--cc-color-surface);
+  border-top: 1px solid var(--cc-color-border-soft);
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+}
+
+.cc-bottom-nav-btn {
+  flex: 1;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 4px;
+  color: var(--cc-color-text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: color 0.15s;
+}
+
+.cc-bottom-nav-btn .anticon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.cc-bottom-nav-btn[data-active="true"] {
+  color: var(--cc-color-primary);
+}
+
+.cc-bottom-nav-btn[data-primary="true"] {
+  color: #fff;
+  position: relative;
+}
+
+.cc-bottom-nav-btn[data-primary="true"]::before {
+  content: "";
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--cc-color-primary);
+  box-shadow: 0 6px 16px rgba(31, 41, 55, 0.25);
+  z-index: -1;
+}
+
+.cc-bottom-nav-btn[data-primary="true"] .anticon {
+  font-size: 24px;
+  position: relative;
+  top: -10px;
+}
+
+.cc-bottom-nav-btn[data-primary="true"] span:last-child {
+  position: relative;
+  top: -8px;
+  color: var(--cc-color-text-muted);
+}
+
+/* ---------- Layout helpers ---------- */
 
 .cc-stack > * + * {
   margin-top: var(--cc-space-md);
@@ -100,7 +244,7 @@ body {
 }
 
 .cc-list-item:hover {
-  background: #fff8ec;
+  background: #f3f4f6;
 }
 
 .cc-detail-field {
@@ -111,22 +255,27 @@ body {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #8a8275;
+  color: var(--cc-color-text-muted);
   margin-bottom: 2px;
 }
 
 .cc-detail-value {
   font-size: 15px;
-  color: #1f1d18;
+  color: var(--cc-color-text);
   word-break: break-word;
 }
 
 .cc-scanner-drop {
-  border: 2px dashed #f0d49a;
+  border: 2px dashed var(--cc-color-border);
   border-radius: 12px;
   padding: 20px;
   text-align: center;
-  background: #fffaf0;
+  background: var(--cc-color-surface);
+}
+
+.cc-scanner-hint {
+  margin-bottom: 12px;
+  color: var(--cc-color-text-muted);
 }
 
 .cc-success-actions {
@@ -135,6 +284,54 @@ body {
   flex-wrap: wrap;
 }
 
+/* ---------- "+ Link to event" inline expander ---------- */
+
+.cc-inline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--cc-color-accent);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.cc-inline-link:hover {
+  text-decoration: underline;
+}
+
+.cc-inline-link .anticon {
+  font-size: 14px;
+}
+
+/* ---------- Footer ---------- */
+
+.cc-footer {
+  text-align: center;
+  padding: 16px;
+  font-size: 13px;
+  color: var(--cc-color-text-muted);
+}
+
+.cc-footer a,
+.cc-footer button {
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.cc-footer a:hover,
+.cc-footer button:hover {
+  color: var(--cc-color-text);
+}
+
+/* Tabs is no longer the primary nav, but keep the spacing for any inner uses */
 .ant-tabs-nav {
   margin-bottom: 16px !important;
 }

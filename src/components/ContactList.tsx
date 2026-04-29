@@ -3,7 +3,7 @@ import { Avatar, Button, Dropdown, Empty, Input, List, Tag } from "antd";
 import { useMemo, useState } from "react";
 import type { Contact, ContactTag } from "@/lib/contactsDb";
 import { exportContactsCsv, exportContactsVcard } from "@/lib/exporters";
-import { tagColors } from "@/lib/theme";
+import { colors, tagColors } from "@/lib/theme";
 import TagBadge from "./TagBadge";
 
 interface Props {
@@ -52,8 +52,8 @@ export default function ContactList({ contacts, onSelect, onAddNew }: Props) {
           disabled={contacts.length === 0}
           menu={{
             items: [
-              { key: "csv", label: "Export as CSV", onClick: () => exportContactsCsv(contacts) },
-              { key: "vcf", label: "Export as vCard (.vcf)", onClick: () => exportContactsVcard(contacts) },
+              { key: "csv", label: "Export all as CSV", onClick: () => exportContactsCsv(contacts) },
+              { key: "vcf", label: "Download all vCards (.vcf)", onClick: () => exportContactsVcard(contacts) },
             ],
           }}
         >
@@ -101,7 +101,7 @@ export default function ContactList({ contacts, onSelect, onAddNew }: Props) {
             >
               <List.Item.Meta
                 avatar={
-                  <Avatar style={{ backgroundColor: "#F59E0B" }}>
+                  <Avatar style={{ backgroundColor: colors.avatarBg }}>
                     {c.name ? initials(c.name) : <UserOutlined />}
                   </Avatar>
                 }

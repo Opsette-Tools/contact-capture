@@ -25,6 +25,10 @@ function timestamp() {
   return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
 }
 
+function safeFilename(s: string) {
+  return s.replace(/[^a-z0-9_\-]+/gi, "_").replace(/^_+|_+$/g, "") || "contact";
+}
+
 export function exportContactsCsv(contacts: Contact[]) {
   const headers = [
     "Name",
@@ -60,7 +64,7 @@ export function exportContactsCsv(contacts: Contact[]) {
   );
   const csv = [headers.join(","), ...rows].join("\r\n");
   // Prepend BOM so Excel detects UTF-8.
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
   downloadBlob(blob, `contacts-${timestamp()}.csv`);
 }
 
@@ -72,7 +76,7 @@ function vcardEscape(value: string | undefined): string {
     .replace(/;/g, "\\;");
 }
 
-function contactToVcard(c: Contact): string {
+export function contactToVcard(c: Contact): string {
   const lines: string[] = ["BEGIN:VCARD", "VERSION:3.0"];
   const name = c.name || "(No name)";
   const parts = name.trim().split(/\s+/);
@@ -102,4 +106,14 @@ export function exportContactsVcard(contacts: Contact[]) {
   const body = contacts.map(contactToVcard).join("\r\n");
   const blob = new Blob([body], { type: "text/vcard;charset=utf-8" });
   downloadBlob(blob, `contacts-${timestamp()}.vcf`);
+}
+
+/**
+ * Download a single contact as a .vcf file. On iOS / Android, opening the
+ * downloaded file from the Files app prompts to add it directly to Contacts.
+ */
+export function exportSingleVcard(contact: Contact) {
+  const body = contactToVcard(contact);
+  const blob = new Blob([body], { type: "text/vcard;charset=utf-8" });
+  downloadBlob(blob, `${safeFilename(contact.name || "contact")}.vcf`);
 }

@@ -84,7 +84,7 @@ export default function EventsTab() {
               className="cc-list-item"
               onClick={() => openEdit(ev)}
               actions={[
-                <Tag key="count" color="orange">
+                <Tag key="count" color="blue">
                   {counts[ev.id] ?? 0} contact{(counts[ev.id] ?? 0) === 1 ? "" : "s"}
                 </Tag>,
               ]}
