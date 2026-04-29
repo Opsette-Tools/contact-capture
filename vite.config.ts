@@ -4,8 +4,8 @@ import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
-export default defineConfig(() => ({
-  base: process.env.VITE_BASE ?? "/",
+export default defineConfig(({ command }) => ({
+  base: command === "build" ? "/contact-capture/" : "/",
   server: {
     host: "::",
     port: 8080,
@@ -18,21 +18,9 @@ export default defineConfig(() => ({
     VitePWA({
       registerType: "autoUpdate",
       devOptions: { enabled: false },
-      includeAssets: ["icon.svg"],
-      manifest: {
-        name: "Contact Capture",
-        short_name: "Contacts",
-        description: "Scan business cards and capture contact details offline.",
-        theme_color: "#1F2937",
-        background_color: "#FFFFFF",
-        display: "standalone",
-        start_url: ".",
-        icons: [
-          { src: "icon.svg", sizes: "any", type: "image/svg+xml" },
-          { src: "icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any maskable" },
-        ],
-      },
+      manifest: false,
       workbox: {
+        navigateFallback: "index.html",
         navigateFallbackDenylist: [/^\/~oauth/],
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
       },
