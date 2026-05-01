@@ -348,3 +348,183 @@ body {
 .ant-tabs-nav {
   margin-bottom: 16px !important;
 }
+
+/* ---------- Camera capture overlay ---------- */
+
+.cc-camera-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: #000;
+  overflow: hidden;
+}
+
+.cc-camera-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cc-camera-mask {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cc-camera-frame {
+  position: relative;
+  width: min(86vw, 520px);
+  border-radius: 16px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  z-index: 1;
+}
+
+.cc-camera-corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-color: #fff;
+  border-style: solid;
+  border-width: 0;
+}
+
+.cc-camera-corner-tl {
+  top: -2px;
+  left: -2px;
+  border-top-width: 4px;
+  border-left-width: 4px;
+  border-top-left-radius: 16px;
+}
+
+.cc-camera-corner-tr {
+  top: -2px;
+  right: -2px;
+  border-top-width: 4px;
+  border-right-width: 4px;
+  border-top-right-radius: 16px;
+}
+
+.cc-camera-corner-bl {
+  bottom: -2px;
+  left: -2px;
+  border-bottom-width: 4px;
+  border-left-width: 4px;
+  border-bottom-left-radius: 16px;
+}
+
+.cc-camera-corner-br {
+  bottom: -2px;
+  right: -2px;
+  border-bottom-width: 4px;
+  border-right-width: 4px;
+  border-bottom-right-radius: 16px;
+}
+
+.cc-camera-hint {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 24px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 6px 14px;
+  border-radius: 999px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.cc-camera-close {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  right: 16px;
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.cc-camera-close:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.cc-camera-switch {
+  position: absolute !important;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  left: 16px;
+  z-index: 3;
+  background: rgba(0, 0, 0, 0.55) !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.cc-camera-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+.cc-camera-shutter {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: transparent;
+  border: 4px solid #fff;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease;
+}
+
+.cc-camera-shutter:active {
+  transform: scale(0.95);
+}
+
+.cc-camera-shutter:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cc-camera-shutter-inner {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #fff;
+  display: block;
+}
+
+/* ---------- Scanner action buttons (3-tier capture) ---------- */
+
+.cc-scanner-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.cc-scanner-actions .ant-btn {
+  height: 48px;
+  font-size: 15px;
+}
