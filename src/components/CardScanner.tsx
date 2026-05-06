@@ -2,11 +2,14 @@ import {
   CameraOutlined,
   LoadingOutlined,
   PictureOutlined,
+  QrcodeOutlined,
 } from "@ant-design/icons";
-import { Alert, Button, Progress, Upload } from "antd";
+import { Alert, Button, Progress, Upload, message } from "antd";
 import { useRef, useState } from "react";
 import CameraCapture from "./CameraCapture";
+import QrScanner from "./QrScanner";
 import { runOcr, type ParsedCard } from "@/lib/ocr";
+import { parseVcard } from "@/lib/parseVcard";
 
 interface Props {
   onParsed: (parsed: ParsedCard) => void;
@@ -19,6 +22,7 @@ export default function CardScanner({ onParsed, onSkip }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const systemCameraRef = useRef<HTMLInputElement | null>(null);
 
   const handleFile = async (file: File | Blob) => {
@@ -59,6 +63,36 @@ export default function CardScanner({ onParsed, onSkip }: Props) {
     e.target.value = "";
   };
 
+  const handleQrScanned = (decoded: string) => {
+    const parsed = parseVcard(decoded);
+    if (!parsed) {
+      // Stay on the scanner — user can keep aiming at a different code.
+      message.error(
+        "That's not a Contact Capture QR — try the photo scanner instead",
+      );
+      setQrOpen(false);
+      return;
+    }
+    setQrOpen(false);
+    // Forward to the same prefill path OCR uses. Missing fields land as
+    // empty strings; the active-event banner auto-prefill (Tier 2) layers
+    // any event context on top in AddNewScreen / ContactForm.
+    onParsed({
+      name: parsed.name ?? "",
+      company: parsed.company ?? "",
+      position: parsed.position ?? "",
+      email: parsed.email ?? "",
+      phone: parsed.phone ?? "",
+      website: parsed.website ?? "",
+      raw: decoded,
+    });
+  };
+
+  const handleQrUnavailable = (reason: string) => {
+    setQrOpen(false);
+    setError(reason);
+  };
+
   return (
     <div className="cc-stack">
       <div className="cc-scanner-drop">
@@ -94,10 +128,21 @@ export default function CardScanner({ onParsed, onSkip }: Props) {
           </div>
         )}
         <div className="cc-scanner-hint">
-          Take a photo or upload a business card. We'll prefill the fields.
+          Scan their QR code, snap their card, or enter details by hand.
         </div>
 
         <div className="cc-scanner-actions">
+          <Button
+            type="primary"
+            icon={<QrcodeOutlined />}
+            disabled={running}
+            size="large"
+            onClick={() => setQrOpen(true)}
+            block
+          >
+            Scan their QR code
+          </Button>
+
           <Button
             type="primary"
             icon={running ? <LoadingOutlined /> : <CameraOutlined />}
@@ -106,7 +151,7 @@ export default function CardScanner({ onParsed, onSkip }: Props) {
             onClick={() => setCameraOpen(true)}
             block
           >
-            {running ? "Reading card…" : "Take photo with camera"}
+            {running ? "Reading card…" : "Scan business card"}
           </Button>
 
           <Upload
@@ -124,7 +169,7 @@ export default function CardScanner({ onParsed, onSkip }: Props) {
               size="large"
               block
             >
-              Upload from library
+              Upload card photo
             </Button>
           </Upload>
         </div>
@@ -150,7 +195,7 @@ export default function CardScanner({ onParsed, onSkip }: Props) {
       {error && <Alert type="warning" showIcon message={error} />}
 
       <Button block onClick={onSkip} disabled={running}>
-        Skip — enter manually
+        Enter manually
       </Button>
 
       {cameraOpen && (
@@ -158,6 +203,14 @@ export default function CardScanner({ onParsed, onSkip }: Props) {
           onCapture={handleCameraCapture}
           onUnavailable={handleCameraUnavailable}
           onClose={() => setCameraOpen(false)}
+        />
+      )}
+
+      {qrOpen && (
+        <QrScanner
+          onScanned={handleQrScanned}
+          onUnavailable={handleQrUnavailable}
+          onClose={() => setQrOpen(false)}
         />
       )}
     </div>

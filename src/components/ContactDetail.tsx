@@ -119,7 +119,7 @@ export default function ContactDetail({ open, contact, onClose, onSave, onDelete
             style={{ marginTop: 16 }}
             onClick={() => handleSaveToPhone(contact)}
           >
-            Save to phone
+            Add to phone Contacts
           </Button>
 
           <Popconfirm

@@ -149,7 +149,8 @@ export default function MyCard({ open, onClose }: Props) {
                 </div>
               )}
               <div className="cc-mycard-qr-help">
-                Have them point their phone camera at the code.
+                Have them point their phone camera at the code — or scan it
+                inside Contact Capture to save you there instead.
               </div>
             </>
           ) : (

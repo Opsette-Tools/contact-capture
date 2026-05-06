@@ -62,6 +62,7 @@ export default function AddNewScreen({ onSaved, onViewList, activeEvent }: Props
     setPrefill({
       name: parsed.name,
       company: parsed.company,
+      position: parsed.position,
       email: parsed.email,
       phone: parsed.phone,
       website: parsed.website,

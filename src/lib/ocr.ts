@@ -3,6 +3,9 @@ import Tesseract from "tesseract.js";
 export interface ParsedCard {
   name: string;
   company: string;
+  /** Job title, e.g. "Founder". OCR currently leaves this empty; populated by
+   *  the QR-scan path via parseVcard(). */
+  position: string;
   email: string;
   phone: string;
   website: string;
@@ -141,5 +144,5 @@ export function parseCardText(raw: string): ParsedCard {
     company = deriveCompanyFromEmail(email);
   }
 
-  return { name, company, email, phone, website, raw };
+  return { name, company, position: "", email, phone, website, raw };
 }
