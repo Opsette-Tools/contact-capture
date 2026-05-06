@@ -447,6 +447,26 @@ body {
   flex-wrap: wrap;
 }
 
+/* Stack the Saved-screen actions vertically on mobile so each one is a
+ * comfortable full-width tap target. The reciprocal QR button can sit at
+ * the top as a primary CTA. */
+@media (max-width: 767px) {
+  .cc-success-actions.ant-space {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 10px;
+  }
+  .cc-success-actions.ant-space > .ant-space-item {
+    width: 100%;
+    margin-inline-end: 0 !important;
+  }
+  .cc-success-actions.ant-space > .ant-space-item > .ant-btn {
+    width: 100%;
+  }
+}
+
 /* ---------- "+ Link to event" inline expander ---------- */
 
 .cc-inline-link {

@@ -10,6 +10,9 @@ export interface ParsedCard {
   phone: string;
   website: string;
   raw: string;
+  /** Which scan path produced this prefill. AddNewScreen uses this to decide
+   *  whether to surface the reciprocal "Show them yours back" CTA on save. */
+  source: "qr" | "ocr";
 }
 
 const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.-]+/i;
@@ -144,5 +147,5 @@ export function parseCardText(raw: string): ParsedCard {
     company = deriveCompanyFromEmail(email);
   }
 
-  return { name, company, position: "", email, phone, website, raw };
+  return { name, company, position: "", email, phone, website, raw, source: "ocr" };
 }

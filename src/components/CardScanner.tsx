@@ -85,6 +85,7 @@ export default function CardScanner({ onParsed, onSkip }: Props) {
       phone: parsed.phone ?? "",
       website: parsed.website ?? "",
       raw: decoded,
+      source: "qr",
     });
   };
 

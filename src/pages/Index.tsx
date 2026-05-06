@@ -113,6 +113,7 @@ const Index = () => {
     <AddNewScreen
       activeEvent={activeEvent}
       onSaved={() => void refreshContacts()}
+      onShowMyCard={() => setMyCardOpen(true)}
       onViewList={() => {
         if (isMobile) {
           setAddOpen(false);
@@ -192,6 +193,7 @@ const Index = () => {
           <AddNewScreen
             activeEvent={activeEvent}
             onSaved={() => void refreshContacts()}
+            onShowMyCard={() => setMyCardOpen(true)}
             onViewList={() => {
               setAddOpen(false);
               setTab("list");
