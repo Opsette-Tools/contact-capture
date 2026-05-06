@@ -62,12 +62,36 @@ export default function CardScanner({ onParsed, onSkip }: Props) {
   return (
     <div className="cc-stack">
       <div className="cc-scanner-drop">
-        {previewUrl && (
+        {previewUrl ? (
           <img
             src={previewUrl}
             alt="Card preview"
             style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 12 }}
           />
+        ) : (
+          <div className="cc-scanner-illustration" aria-hidden="true">
+            <svg
+              viewBox="0 0 200 120"
+              xmlns="http://www.w3.org/2000/svg"
+              role="presentation"
+            >
+              <rect
+                x="6"
+                y="6"
+                width="188"
+                height="108"
+                rx="10"
+                ry="10"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeOpacity="0.55"
+              />
+              <rect x="22" y="34" width="92" height="8" rx="3" fill="currentColor" fillOpacity="0.35" />
+              <rect x="22" y="54" width="120" height="6" rx="3" fill="currentColor" fillOpacity="0.22" />
+              <rect x="22" y="70" width="80" height="6" rx="3" fill="currentColor" fillOpacity="0.22" />
+            </svg>
+          </div>
         )}
         <div className="cc-scanner-hint">
           Take a photo or upload a business card. We'll prefill the fields.

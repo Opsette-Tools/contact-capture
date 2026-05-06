@@ -14,7 +14,7 @@
   --cc-color-primary: #1f2937;
   --cc-color-accent: #3b82f6;
 
-  --cc-bottom-nav-h: 64px;
+  --cc-bottom-nav-h: 96px;
   --cc-header-h: 56px;
 }
 
@@ -153,7 +153,7 @@ body {
   z-index: 20;
   background: var(--cc-color-surface);
   border-top: 1px solid var(--cc-color-border-soft);
-  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
   display: flex;
   align-items: stretch;
   justify-content: space-around;
@@ -165,13 +165,13 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 4px;
   background: none;
   border: none;
   cursor: pointer;
   padding: 6px 4px;
   color: var(--cc-color-text-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   border-radius: 8px;
   transition: color 0.15s;
@@ -186,35 +186,110 @@ body {
   color: var(--cc-color-primary);
 }
 
+/* Floating + button. The circle is rendered with ::before centered around the
+ * icon (which is its own grid item via flex-direction column). No negative
+ * margins — the circle sizes itself to enclose the icon, and the label sits
+ * naturally below. */
 .cc-bottom-nav-btn[data-primary="true"] {
-  color: #fff;
   position: relative;
-}
-
-.cc-bottom-nav-btn[data-primary="true"]::before {
-  content: "";
-  position: absolute;
-  top: -16px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--cc-color-primary);
-  box-shadow: 0 6px 16px rgba(31, 41, 55, 0.25);
-  z-index: -1;
+  color: var(--cc-color-text-muted);
 }
 
 .cc-bottom-nav-btn[data-primary="true"] .anticon {
-  font-size: 24px;
   position: relative;
-  top: -10px;
+  z-index: 1;
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--cc-color-primary);
+  color: var(--cc-color-bg);
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
 
-.cc-bottom-nav-btn[data-primary="true"] span:last-child {
-  position: relative;
-  top: -8px;
-  color: var(--cc-color-text-muted);
+/* Mobile sizing block — gated so desktop stays close to current. iOS Safari
+ * zooms inputs whose computed font-size is < 16px on focus, so 16px is a
+ * floor for any text input on mobile. */
+@media (max-width: 767px) {
+  /* Inputs */
+  .ant-input,
+  .ant-input-affix-wrapper,
+  .ant-input-affix-wrapper > input.ant-input,
+  .ant-select-single .ant-select-selector,
+  .ant-picker,
+  .ant-picker-input > input,
+  .ant-input-number,
+  .ant-input-number-input {
+    font-size: 16px !important;
+  }
+  .ant-input-affix-wrapper,
+  .ant-select-single .ant-select-selector,
+  .ant-picker,
+  .ant-input-number {
+    min-height: 52px;
+  }
+  .ant-input-affix-wrapper > .ant-input {
+    height: auto;
+  }
+  /* Single-line .ant-input (no affix wrapper) */
+  .ant-input:not(textarea) {
+    min-height: 52px;
+  }
+
+  /* Buttons */
+  .ant-btn-lg,
+  .ant-btn.ant-btn-block {
+    min-height: 52px;
+    font-size: 16px;
+  }
+  .ant-btn:not(.ant-btn-sm):not(.ant-btn-link):not(.cc-camera-close) {
+    font-size: 15px;
+  }
+
+  /* Form labels — slightly heavier, more spacing. */
+  .ant-form-item .ant-form-item-label > label {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .ant-form-item {
+    margin-bottom: 20px;
+  }
+
+  /* Contact list rows */
+  .cc-list-item.ant-list-item {
+    padding: 14px 12px !important;
+  }
+  .cc-list-item .ant-list-item-meta-avatar .ant-avatar {
+    width: 56px;
+    height: 56px;
+    line-height: 56px;
+    font-size: 18px;
+  }
+  .cc-list-item .ant-list-item-meta-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .cc-list-item .ant-list-item-meta-description {
+    font-size: 14px;
+    color: var(--cc-color-text-muted);
+  }
+
+  /* Bottom nav: bigger icons + labels */
+  .cc-bottom-nav-btn .anticon {
+    font-size: 26px;
+  }
+  .cc-bottom-nav-btn {
+    font-size: 13px;
+  }
+  .cc-bottom-nav-btn[data-primary="true"] .anticon {
+    width: 52px;
+    height: 52px;
+    font-size: 26px;
+  }
 }
 
 /* ---------- Layout helpers ---------- */
@@ -247,6 +322,31 @@ body {
   cursor: pointer;
   user-select: none;
   padding: 4px 10px;
+  background: var(--cc-color-bg);
+  border-color: var(--cc-color-border);
+  color: var(--cc-color-text);
+}
+
+.cc-filter-tag.ant-tag-has-color {
+  /* Active colored tag (e.g. green/blue/etc.) — let antd's preset styling win. */
+  background: unset;
+  border-color: unset;
+  color: unset;
+}
+
+/* The "All" pill when active uses color="default" — pin it to surface tokens
+ * so it doesn't render as a bright light grey on dark. */
+.cc-filter-tag.ant-tag-default {
+  background: var(--cc-color-surface);
+  border-color: var(--cc-color-border);
+  color: var(--cc-color-text);
+}
+
+@media (max-width: 767px) {
+  .cc-filter-tag {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
 }
 
 .cc-list-item {
@@ -258,6 +358,32 @@ body {
 
 .cc-list-item:hover {
   background: var(--cc-color-border-soft);
+}
+
+.cc-avatar.ant-avatar {
+  background: var(--cc-color-primary);
+  color: var(--cc-color-bg);
+  font-weight: 600;
+}
+
+.cc-list-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.cc-list-title-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cc-list-title .ant-tag {
+  flex: 0 0 auto;
 }
 
 .cc-detail-field {
@@ -281,14 +407,38 @@ body {
 .cc-scanner-drop {
   border: 2px dashed var(--cc-color-border);
   border-radius: 12px;
-  padding: 20px;
+  padding: 24px 20px;
   text-align: center;
   background: var(--cc-color-surface);
 }
 
-.cc-scanner-hint {
-  margin-bottom: 12px;
+.cc-scanner-illustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px auto 16px;
   color: var(--cc-color-text-muted);
+}
+
+.cc-scanner-illustration svg {
+  width: min(220px, 70%);
+  height: auto;
+  display: block;
+}
+
+.cc-scanner-hint {
+  margin-bottom: 16px;
+  color: var(--cc-color-text-muted);
+  font-size: 15px;
+}
+
+@media (max-width: 767px) {
+  .cc-scanner-hint {
+    font-size: 16px;
+  }
+  .cc-scanner-illustration svg {
+    width: min(240px, 75%);
+  }
 }
 
 .cc-success-actions {
@@ -329,19 +479,21 @@ body {
   color: var(--cc-color-text-muted);
 }
 
-.cc-footer a,
-.cc-footer button {
-  color: inherit;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font: inherit;
+
+.cc-footer .ant-space-item .ant-btn-link {
+  color: var(--cc-color-text-muted);
+  font-size: 13px;
+  padding: 0 4px;
+  height: auto;
 }
 
-.cc-footer a:hover,
-.cc-footer button:hover {
+.cc-footer .ant-space-item .ant-btn-link:hover {
   color: var(--cc-color-text);
+}
+
+.cc-footer .ant-divider-vertical {
+  border-color: var(--cc-color-border);
+  margin: 0 4px;
 }
 
 /* Tabs is no longer the primary nav, but keep the spacing for any inner uses */

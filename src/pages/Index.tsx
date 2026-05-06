@@ -1,4 +1,4 @@
-import { Drawer, Grid, Tabs } from "antd";
+import { Button, Divider, Drawer, Grid, Space, Tabs } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { OpsetteHeader } from "@/components/opsette-header";
@@ -118,16 +118,23 @@ const Index = () => {
       </main>
 
       <footer className="cc-footer">
-        <button onClick={() => navigate("/about")}>About</button>
-        <span style={{ margin: "0 8px", color: "#cbd5e1" }}>·</span>
-        <button onClick={() => navigate("/privacy")}>Privacy</button>
-        <span style={{ margin: "0 8px", color: "#cbd5e1" }}>·</span>
-        <span>
-          By{" "}
-          <a href="https://opsette.io" target="_blank" rel="noopener noreferrer">
-            Opsette
-          </a>
-        </span>
+        <Space split={<Divider type="vertical" />} size={0} wrap>
+          <Button type="link" size="small" onClick={() => navigate("/about")}>
+            About
+          </Button>
+          <Button type="link" size="small" onClick={() => navigate("/privacy")}>
+            Privacy
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            href="https://opsette.io"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            By Opsette
+          </Button>
+        </Space>
       </footer>
 
       {isMobile && <BottomNav active={tab} onChange={handleNavChange} />}

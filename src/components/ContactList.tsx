@@ -3,7 +3,7 @@ import { Avatar, Button, Dropdown, Empty, Input, List, Tag } from "antd";
 import { useMemo, useState } from "react";
 import type { Contact } from "@/lib/contactsDb";
 import { exportContactsCsv, exportContactsVcard } from "@/lib/exporters";
-import { colorForTag, colors } from "@/lib/theme";
+import { colorForTag } from "@/lib/theme";
 import TagBadge from "./TagBadge";
 
 interface Props {
@@ -107,19 +107,19 @@ export default function ContactList({ contacts, onSelect, onAddNew }: Props) {
             <List.Item
               className="cc-list-item"
               onClick={() => onSelect(c)}
-              actions={
-                c.tags.length > 0
-                  ? [<TagBadge key="tag" tag={c.tags[0]} />]
-                  : []
-              }
             >
               <List.Item.Meta
                 avatar={
-                  <Avatar style={{ backgroundColor: colors.avatarBg }}>
+                  <Avatar className="cc-avatar">
                     {c.name ? initials(c.name) : <UserOutlined />}
                   </Avatar>
                 }
-                title={c.name || "(No name)"}
+                title={
+                  <span className="cc-list-title">
+                    <span className="cc-list-title-text">{c.name || "(No name)"}</span>
+                    {c.tags.length > 0 && <TagBadge tag={c.tags[0]} />}
+                  </span>
+                }
                 description={c.company || c.email || c.phone || "—"}
               />
             </List.Item>
