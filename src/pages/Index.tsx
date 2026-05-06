@@ -8,12 +8,19 @@ import ContactList from "@/components/ContactList";
 import ContactDetail from "@/components/ContactDetail";
 import AddNewScreen from "@/components/AddNewScreen";
 import EventsTab from "@/components/EventsTab";
+import MyCard from "@/components/MyCard";
 import {
   deleteContact,
+  getActiveEvent,
   getAllContacts,
   putContact,
   type Contact,
+  type Event,
 } from "@/lib/contactsDb";
+
+type EventPendingAction =
+  | { kind: "create" }
+  | { kind: "edit"; eventId: string };
 
 const Index = () => {
   const screens = Grid.useBreakpoint();
@@ -21,12 +28,15 @@ const Index = () => {
   const navigate = useNavigate();
 
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [activeEvent, setActiveEvent] = useState<Event | undefined>(undefined);
   const [tab, setTab] = useState<BottomNavKey>("list");
   const [selected, setSelected] = useState<Contact | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [myCardOpen, setMyCardOpen] = useState(false);
+  const [eventPending, setEventPending] = useState<EventPendingAction | undefined>();
 
-  const refresh = useCallback(async () => {
+  const refreshContacts = useCallback(async () => {
     const all = await getAllContacts();
     setContacts(all);
     if (selected) {
@@ -35,8 +45,13 @@ const Index = () => {
     }
   }, [selected]);
 
+  const refreshActiveEvent = useCallback(async () => {
+    setActiveEvent(await getActiveEvent());
+  }, []);
+
   useEffect(() => {
-    void refresh();
+    void refreshContacts();
+    void refreshActiveEvent();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -51,7 +66,7 @@ const Index = () => {
 
   const handleSave = async (c: Contact) => {
     await putContact(c);
-    await refresh();
+    await refreshContacts();
     setSelected(c);
   };
 
@@ -59,7 +74,7 @@ const Index = () => {
     await deleteContact(id);
     setSelected(null);
     setDetailOpen(false);
-    await refresh();
+    await refreshContacts();
   };
 
   const handleNavChange = (key: BottomNavKey) => {
@@ -70,19 +85,34 @@ const Index = () => {
     setTab(key);
   };
 
+  const handleEditActiveEvent = (ev: Event) => {
+    setEventPending({ kind: "edit", eventId: ev.id });
+    setTab("events");
+  };
+
   const listView = (
     <ContactList
       contacts={contacts}
       onSelect={handleSelect}
       onAddNew={() => (isMobile ? setAddOpen(true) : setTab("add"))}
+      activeEvent={activeEvent}
+      onEditActiveEvent={handleEditActiveEvent}
+      onOpenMyCard={() => setMyCardOpen(true)}
     />
   );
 
-  const eventsView = <EventsTab />;
+  const eventsView = (
+    <EventsTab
+      pendingAction={eventPending}
+      onPendingActionConsumed={() => setEventPending(undefined)}
+      onChange={() => void refreshActiveEvent()}
+    />
+  );
 
   const addView = (
     <AddNewScreen
-      onSaved={() => void refresh()}
+      activeEvent={activeEvent}
+      onSaved={() => void refreshContacts()}
       onViewList={() => {
         if (isMobile) {
           setAddOpen(false);
@@ -147,6 +177,8 @@ const Index = () => {
         onDelete={handleDelete}
       />
 
+      <MyCard open={myCardOpen} onClose={() => setMyCardOpen(false)} />
+
       {/* Mobile-only: Add flow as a full-screen modal triggered from the center nav button. */}
       {isMobile && (
         <Drawer
@@ -158,7 +190,8 @@ const Index = () => {
           styles={{ body: { padding: 16 } }}
         >
           <AddNewScreen
-            onSaved={() => void refresh()}
+            activeEvent={activeEvent}
+            onSaved={() => void refreshContacts()}
             onViewList={() => {
               setAddOpen(false);
               setTab("list");

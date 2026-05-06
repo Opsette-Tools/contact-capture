@@ -1,26 +1,59 @@
 import { CheckCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, message, Space } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CardScanner from "./CardScanner";
 import ContactForm from "./ContactForm";
-import { newContact, putContact, type Contact } from "@/lib/contactsDb";
+import {
+  newContact,
+  putContact,
+  todayLocalIso,
+  type Contact,
+  type Event,
+} from "@/lib/contactsDb";
 import type { ParsedCard } from "@/lib/ocr";
 
 interface Props {
   onSaved: () => void;
   onViewList: () => void;
+  /** When set, new contacts are pre-tagged with this event's id/name and
+   *  metDate = today. User can still clear it in the form. */
+  activeEvent?: Event;
 }
 
 type Step = "scan" | "form" | "saved";
 
-export default function AddNewScreen({ onSaved, onViewList }: Props) {
+function buildDraft(activeEvent?: Event): Contact {
+  const draft = newContact();
+  if (activeEvent) {
+    draft.eventId = activeEvent.id;
+    draft.eventName = activeEvent.name;
+    draft.metDate = activeEvent.date || todayLocalIso();
+    if (activeEvent.location) draft.metAt = activeEvent.location;
+  }
+  return draft;
+}
+
+export default function AddNewScreen({ onSaved, onViewList, activeEvent }: Props) {
   const [step, setStep] = useState<Step>("scan");
-  const [draft, setDraft] = useState<Contact>(newContact());
+  const [draft, setDraft] = useState<Contact>(() => buildDraft(activeEvent));
   const [prefill, setPrefill] = useState<Partial<Contact> | undefined>();
   const [saving, setSaving] = useState(false);
 
+  // If the active event changes mid-session (e.g. user creates an event from
+  // the banner CTA), refresh the draft so the new contact picks it up.
+  useEffect(() => {
+    setDraft((prev) => {
+      // Only auto-update if the form hasn't been edited yet (everything but
+      // event/met fields is still default).
+      const isPristine =
+        !prev.name && !prev.company && !prev.position && !prev.email && !prev.phone;
+      if (!isPristine) return prev;
+      return buildDraft(activeEvent);
+    });
+  }, [activeEvent]);
+
   const reset = () => {
-    setDraft(newContact());
+    setDraft(buildDraft(activeEvent));
     setPrefill(undefined);
     setStep("scan");
   };

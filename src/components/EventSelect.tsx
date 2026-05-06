@@ -90,7 +90,7 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
         onOk={handleCreate}
         okText="Create event"
         title="New event"
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical" preserve={false}>
           <Form.Item

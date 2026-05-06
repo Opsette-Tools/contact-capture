@@ -2,9 +2,10 @@ import { DeleteOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icon
 import { Button, Drawer, Popconfirm, Space, message } from "antd";
 import { useState } from "react";
 import type { Contact } from "@/lib/contactsDb";
-import { exportSingleVcard } from "@/lib/exporters";
+import { canShareFiles, shareSingleVcard } from "@/lib/exporters";
 import ContactForm from "./ContactForm";
 import TagBadge from "./TagBadge";
+import VoiceMemoRecorder from "./VoiceMemoRecorder";
 
 interface Props {
   open: boolean;
@@ -33,9 +34,15 @@ export default function ContactDetail({ open, contact, onClose, onSave, onDelete
     onClose();
   };
 
-  const handleSaveToPhone = (c: Contact) => {
-    exportSingleVcard(c);
-    message.success("vCard downloaded — open it to add to your phone's Contacts");
+  const handleSaveToPhone = async (c: Contact) => {
+    const usedShare = canShareFiles();
+    const ok = await shareSingleVcard(c);
+    if (!ok) return; // user cancelled the share sheet — stay quiet
+    if (usedShare) {
+      message.success("vCard sent — choose Contacts to save it");
+    } else {
+      message.success("vCard downloaded — open it to add to your phone's Contacts");
+    }
   };
 
   return (
@@ -83,6 +90,7 @@ export default function ContactDetail({ open, contact, onClose, onSave, onDelete
           )}
           <Field label="Name" value={contact.name} />
           <Field label="Company" value={contact.company} />
+          <Field label="Position" value={contact.position} />
           <Field label="Email" value={contact.email} />
           <Field label="Phone" value={contact.phone} />
           <Field label="Website" value={contact.website ?? ""} />
@@ -91,6 +99,18 @@ export default function ContactDetail({ open, contact, onClose, onSave, onDelete
           <Field label="Where you met" value={contact.metAt} />
           <Field label="Memorable detail" value={contact.memorableDetail} />
           <Field label="Follow-up" value={contact.followUp} />
+
+          {contact.voiceMemo && (
+            <div style={{ marginTop: 16 }}>
+              <VoiceMemoRecorder
+                value={contact.voiceMemo}
+                onChange={() => {
+                  /* read-only — no edits from detail view */
+                }}
+                readOnly
+              />
+            </div>
+          )}
 
           <Button
             type="primary"

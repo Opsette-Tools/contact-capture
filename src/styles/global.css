@@ -680,3 +680,182 @@ body {
   height: 48px;
   font-size: 15px;
 }
+
+/* ---------- Active event banner ---------- */
+
+.cc-active-event {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--cc-color-surface);
+  border: 1px solid var(--cc-color-border-soft);
+  border-left: 4px solid var(--cc-color-accent);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cc-active-event:hover {
+  background: var(--cc-color-border-soft);
+}
+
+.cc-active-event-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cc-active-event-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cc-color-accent);
+}
+
+.cc-active-event-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cc-color-text);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cc-active-event-meta {
+  font-size: 13px;
+  color: var(--cc-color-text-muted);
+  margin-top: 2px;
+}
+
+/* ---------- Voice memo ---------- */
+
+.cc-voice-memo {
+  border: 1px solid var(--cc-color-border-soft);
+  border-radius: 10px;
+  padding: 14px;
+  background: var(--cc-color-surface);
+  margin-top: 8px;
+}
+
+.cc-voice-memo-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cc-color-text-muted);
+  margin-bottom: 10px;
+}
+
+.cc-voice-memo-audio {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.cc-voice-memo-mic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  border: 2px solid var(--cc-color-border);
+  background: var(--cc-color-bg);
+  color: var(--cc-color-text);
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.cc-voice-memo-mic .anticon {
+  font-size: 20px;
+}
+
+.cc-voice-memo-mic:hover {
+  border-color: var(--cc-color-accent);
+}
+
+.cc-voice-memo-mic.is-recording {
+  background: var(--cc-color-accent);
+  border-color: var(--cc-color-accent);
+  color: #ffffff;
+  animation: cc-voice-memo-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes cc-voice-memo-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(59, 130, 246, 0); }
+}
+
+.cc-voice-memo-interim {
+  display: block;
+  margin-top: 8px;
+  font-style: italic;
+  font-size: 13px;
+}
+
+.cc-voice-memo-hint {
+  font-size: 12px;
+  color: var(--cc-color-text-muted);
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* ---------- My Card / QR ---------- */
+
+.cc-mycard-qr-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.cc-mycard-qr-wrap {
+  /* QR scanners need a light background in both modes — pin to white. */
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cc-mycard-qr-img {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.cc-mycard-qr-name {
+  margin-top: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--cc-color-text);
+}
+
+.cc-mycard-qr-sub {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--cc-color-text-muted);
+}
+
+.cc-mycard-qr-help {
+  text-align: center;
+  font-size: 13px;
+  color: var(--cc-color-text-muted);
+  margin-top: 12px;
+}
+
+.cc-mycard-qr-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--cc-color-text-muted);
+}

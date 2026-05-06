@@ -2,9 +2,10 @@ import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, DatePicker, Form, Input, Select, Space } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import type { Contact, Event } from "@/lib/contactsDb";
+import type { Contact, Event, VoiceMemo } from "@/lib/contactsDb";
 import { TAG_SUGGESTIONS } from "@/lib/contactsDb";
 import EventSelect from "./EventSelect";
+import VoiceMemoRecorder from "./VoiceMemoRecorder";
 
 interface Props {
   initial: Contact;
@@ -32,6 +33,12 @@ export default function ContactForm({
   // user explicitly clicks "+ Link to event". Keeps the form lean when the
   // user is just dropping in a contact they didn't meet at an event.
   const [eventOpen, setEventOpen] = useState<boolean>(!!initial.eventId);
+  // Voice memo holds a Blob — kept out of the antd Form values to avoid the
+  // "Blob is not a plain object" warnings, and to keep the form value tree
+  // strictly serializable.
+  const [voiceMemo, setVoiceMemo] = useState<VoiceMemo | undefined>(
+    initial.voiceMemo,
+  );
 
   useEffect(() => {
     form.setFieldsValue({
@@ -39,6 +46,7 @@ export default function ContactForm({
       metDate: initial.metDate ? dayjs(initial.metDate) : null,
     });
     setEventOpen(!!initial.eventId);
+    setVoiceMemo(initial.voiceMemo);
   }, [initial, form]);
 
   useEffect(() => {
@@ -87,6 +95,7 @@ export default function ContactForm({
       metDate: values.metDate ? values.metDate.format("YYYY-MM-DD") : undefined,
       eventId: values.eventId || undefined,
       eventName: values.eventName || undefined,
+      voiceMemo,
       updatedAt: Date.now(),
     } as Contact;
     await onSubmit(merged);
@@ -112,6 +121,9 @@ export default function ContactForm({
       </Form.Item>
       <Form.Item label="Company" name="company">
         <Input placeholder="Acme Inc." autoComplete="off" />
+      </Form.Item>
+      <Form.Item label="Position" name="position">
+        <Input placeholder="Founder, Sales, VP Marketing…" autoComplete="off" />
       </Form.Item>
       <Form.Item label="Email" name="email">
         <Input placeholder="jane@acme.com" type="email" autoComplete="off" />
@@ -173,6 +185,11 @@ export default function ContactForm({
       <Form.Item label="Memorable detail" name="memorableDetail">
         <Input.TextArea rows={3} placeholder="Something you want to remember about them" />
       </Form.Item>
+
+      <Form.Item>
+        <VoiceMemoRecorder value={voiceMemo} onChange={setVoiceMemo} />
+      </Form.Item>
+
       <Form.Item label="Follow-up action" name="followUp">
         <Input placeholder="Send portfolio, schedule call…" autoComplete="off" />
       </Form.Item>

@@ -1,5 +1,25 @@
-import { CalendarOutlined, DeleteOutlined, EditOutlined, EnvironmentOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, DatePicker, Empty, Form, Input, List, Modal, Popconfirm, Space, Tag, message } from "antd";
+import {
+  CalendarOutlined,
+  ClockCircleOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  EnvironmentOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
+import {
+  Button,
+  DatePicker,
+  Empty,
+  Form,
+  Input,
+  List,
+  Modal,
+  Popconfirm,
+  Space,
+  Tag,
+  TimePicker,
+  message,
+} from "antd";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import {
@@ -11,7 +31,24 @@ import {
   type Event,
 } from "@/lib/contactsDb";
 
-export default function EventsTab() {
+interface Props {
+  /** When set, EventsTab opens the matching modal once on mount/change.
+   *  - { kind: "create" } opens a blank New Event modal.
+   *  - { kind: "edit", eventId } opens the modal pre-loaded with that event.
+   *  Each new pendingAction value triggers one open; pass a fresh object to
+   *  open again. Index passes undefined when nothing should auto-open. */
+  pendingAction?: { kind: "create" } | { kind: "edit"; eventId: string };
+  /** Called after pendingAction has been consumed, so Index can clear it. */
+  onPendingActionConsumed?: () => void;
+  /** Fires after any save/delete so Index can re-check the active event. */
+  onChange?: () => void;
+}
+
+export default function EventsTab({
+  pendingAction,
+  onPendingActionConsumed,
+  onChange,
+}: Props) {
   const [events, setEvents] = useState<Event[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [editing, setEditing] = useState<Event | null>(null);
@@ -30,6 +67,35 @@ export default function EventsTab() {
     void load();
   }, []);
 
+  // Consume pendingAction once events have loaded (so edit can find the event
+  // by id). Re-fires whenever pendingAction reference changes.
+  useEffect(() => {
+    if (!pendingAction) return;
+    if (pendingAction.kind === "create") {
+      setEditing(newEvent());
+      form.resetFields();
+      onPendingActionConsumed?.();
+      return;
+    }
+    if (pendingAction.kind === "edit") {
+      const ev = events.find((e) => e.id === pendingAction.eventId);
+      if (ev) {
+        setEditing(ev);
+        form.setFieldsValue({
+          name: ev.name,
+          date: ev.date ? dayjs(ev.date) : null,
+          time: ev.time ? dayjs(ev.time, "h:mm A") : null,
+          location: ev.location,
+          notes: ev.notes,
+        });
+        onPendingActionConsumed?.();
+      }
+      // If event not yet loaded, leave pendingAction in place; this effect
+      // re-runs when `events` updates.
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAction, events]);
+
   const openCreate = () => {
     setEditing(newEvent());
     form.resetFields();
@@ -40,6 +106,7 @@ export default function EventsTab() {
     form.setFieldsValue({
       name: ev.name,
       date: ev.date ? dayjs(ev.date) : null,
+      time: ev.time ? dayjs(ev.time, "h:mm A") : null,
       location: ev.location,
       notes: ev.notes,
     });
@@ -52,6 +119,7 @@ export default function EventsTab() {
       ...editing,
       name: values.name,
       date: values.date ? dayjs(values.date).format("YYYY-MM-DD") : "",
+      time: values.time ? dayjs(values.time).format("h:mm A") : "",
       location: values.location ?? "",
       notes: values.notes ?? "",
       updatedAt: Date.now(),
@@ -59,12 +127,14 @@ export default function EventsTab() {
     await putEvent(updated);
     setEditing(null);
     await load();
+    onChange?.();
     message.success("Event saved");
   };
 
   const handleDelete = async (id: string) => {
     await deleteEvent(id);
     await load();
+    onChange?.();
     message.success("Event deleted");
   };
 
@@ -96,6 +166,11 @@ export default function EventsTab() {
                     {ev.date && (
                       <span>
                         <CalendarOutlined /> {dayjs(ev.date).format("MMM D, YYYY")}
+                      </span>
+                    )}
+                    {ev.time && (
+                      <span>
+                        <ClockCircleOutlined /> {ev.time}
                       </span>
                     )}
                     {ev.location && (
@@ -140,7 +215,7 @@ export default function EventsTab() {
             </Space>
           </Space>
         }
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical" preserve={false}>
           <Form.Item
@@ -152,6 +227,15 @@ export default function EventsTab() {
           </Form.Item>
           <Form.Item label="Date" name="date">
             <DatePicker style={{ width: "100%" }} format="MMM D, YYYY" />
+          </Form.Item>
+          <Form.Item label="Time" name="time">
+            <TimePicker
+              style={{ width: "100%" }}
+              format="h:mm A"
+              minuteStep={5}
+              use12Hours
+              suffixIcon={<ClockCircleOutlined />}
+            />
           </Form.Item>
           <Form.Item label="Location" name="location">
             <Input placeholder="Grill's Lakeside, Orange Blossom Trail" />
