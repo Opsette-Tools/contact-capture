@@ -22,14 +22,13 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
+import { newEvent, type Event } from "@/lib/contactsDb";
 import {
   countContactsForEvent,
   deleteEvent,
   getAllEvents,
-  newEvent,
-  putEvent,
-  type Event,
-} from "@/lib/contactsDb";
+  saveEvent,
+} from "@/lib/storage";
 
 interface Props {
   /** When set, EventsTab opens the matching modal once on mount/change.
@@ -124,7 +123,7 @@ export default function EventsTab({
       notes: values.notes ?? "",
       updatedAt: Date.now(),
     };
-    await putEvent(updated);
+    await saveEvent(updated);
     setEditing(null);
     await load();
     onChange?.();

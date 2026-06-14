@@ -9,14 +9,14 @@ import ContactDetail from "@/components/ContactDetail";
 import AddNewScreen from "@/components/AddNewScreen";
 import EventsTab from "@/components/EventsTab";
 import MyCard from "@/components/MyCard";
+import type { Contact, Event } from "@/lib/contactsDb";
 import {
   deleteContact,
   getActiveEvent,
   getAllContacts,
-  putContact,
-  type Contact,
-  type Event,
-} from "@/lib/contactsDb";
+  initStorage,
+  saveContact,
+} from "@/lib/storage";
 
 type EventPendingAction =
   | { kind: "create" }
@@ -28,6 +28,8 @@ const Index = () => {
   const navigate = useNavigate();
 
   const [contacts, setContacts] = useState<Contact[]>([]);
+  // Today's event, if the user has created one. Drives the contacts-list
+  // banner; undefined when there's no event for today yet.
   const [activeEvent, setActiveEvent] = useState<Event | undefined>(undefined);
   const [tab, setTab] = useState<BottomNavKey>("list");
   const [selected, setSelected] = useState<Contact | null>(null);
@@ -46,12 +48,19 @@ const Index = () => {
   }, [selected]);
 
   const refreshActiveEvent = useCallback(async () => {
+    // Today's event drives the banner. Undefined when none exists yet — events
+    // are created on demand from the contact form, never auto-spawned on load.
     setActiveEvent(await getActiveEvent());
   }, []);
 
   useEffect(() => {
-    void refreshContacts();
-    void refreshActiveEvent();
+    // Resolve the storage backend (IndexedDB standalone vs Opsette shared)
+    // before the first reads, so embedded sessions hydrate from the parent.
+    void (async () => {
+      await initStorage();
+      await refreshActiveEvent();
+      await refreshContacts();
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -65,7 +74,7 @@ const Index = () => {
   };
 
   const handleSave = async (c: Contact) => {
-    await putContact(c);
+    await saveContact(c);
     await refreshContacts();
     setSelected(c);
   };

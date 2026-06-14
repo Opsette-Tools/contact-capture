@@ -1,8 +1,15 @@
-import { DeleteOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
+import {
+  CheckCircleFilled,
+  DeleteOutlined,
+  DownloadOutlined,
+  EditOutlined,
+  SendOutlined,
+} from "@ant-design/icons";
 import { Button, Drawer, Popconfirm, Space, message } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Contact } from "@/lib/contactsDb";
 import { canShareFiles, shareSingleVcard } from "@/lib/exporters";
+import { emitContactToOpsette, isEmbedded } from "@/lib/storage";
 import ContactForm from "./ContactForm";
 import TagBadge from "./TagBadge";
 import VoiceMemoRecorder from "./VoiceMemoRecorder";
@@ -28,10 +35,39 @@ function Field({ label, value }: { label: string; value: string }) {
 export default function ContactDetail({ open, contact, onClose, onSave, onDelete }: Props) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Whether the tool is embedded in Opsette — gates the "Add to Opsette" button.
+  const [embedded, setEmbedded] = useState(false);
+  const [emitting, setEmitting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void isEmbedded().then((v) => {
+      if (!cancelled) setEmbedded(v);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleClose = () => {
     setEditing(false);
     onClose();
+  };
+
+  const handleAddToOpsette = async (c: Contact) => {
+    setEmitting(true);
+    try {
+      await emitContactToOpsette(c);
+      message.success("Added to your Opsette inbox for review.");
+      // Reflect the emittedAt stamp in the UI via the parent's refresh path.
+      await onSave({ ...c, emittedAt: Date.now() });
+    } catch (err) {
+      message.error(
+        err instanceof Error ? err.message : "Couldn't add to Opsette. Try again.",
+      );
+    } finally {
+      setEmitting(false);
+    }
   };
 
   const handleSaveToPhone = async (c: Contact) => {
@@ -91,6 +127,7 @@ export default function ContactDetail({ open, contact, onClose, onSave, onDelete
           <Field label="Name" value={contact.name} />
           <Field label="Company" value={contact.company} />
           <Field label="Position" value={contact.position} />
+          <Field label="Relationship" value={contact.contactType} />
           <Field label="Email" value={contact.email} />
           <Field label="Phone" value={contact.phone} />
           <Field label="Website" value={contact.website ?? ""} />
@@ -112,11 +149,25 @@ export default function ContactDetail({ open, contact, onClose, onSave, onDelete
             </div>
           )}
 
+          {embedded && (
+            <Button
+              type="primary"
+              icon={contact.emittedAt ? <CheckCircleFilled /> : <SendOutlined />}
+              block
+              loading={emitting}
+              disabled={!!contact.emittedAt}
+              style={{ marginTop: 16 }}
+              onClick={() => handleAddToOpsette(contact)}
+            >
+              {contact.emittedAt ? "Added to Opsette" : "Add to Opsette"}
+            </Button>
+          )}
+
           <Button
-            type="primary"
+            type={embedded ? "default" : "primary"}
             icon={<DownloadOutlined />}
             block
-            style={{ marginTop: 16 }}
+            style={{ marginTop: embedded ? 12 : 16 }}
             onClick={() => handleSaveToPhone(contact)}
           >
             Add to phone Contacts

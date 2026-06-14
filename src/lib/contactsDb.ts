@@ -26,15 +26,29 @@ export interface VoiceMemo {
   recordedAt: number;
 }
 
+/**
+ * The one constrained relationship field Opsette accepts on emit. Distinct from
+ * the free-form `tags` array: tags stay local & rich; `contactType` is the only
+ * field that maps to Opsette's `relationship` (server resolves Lead/Client/Vendor
+ * → the client_relationship + client_status enums). Defaults to "Lead".
+ */
+export const CONTACT_TYPES = ["Lead", "Client", "Vendor"] as const;
+export type ContactType = (typeof CONTACT_TYPES)[number];
+
 export interface Contact {
   id: string;
   name: string;
   company: string;
-  /** Job title / role — e.g. "Founder", "VP Marketing". Free-form, optional. */
+  /** Job title / role — e.g. "Founder", "VP Marketing". Free-form, optional.
+   *  Maps to Opsette's `title` on emit. */
   position: string;
   email: string;
   phone: string;
   website: string;
+  /** Constrained relationship for Opsette emit. Lead | Client | Vendor. */
+  contactType: ContactType;
+  /** Set once this contact has been emitted to the Opsette review inbox. */
+  emittedAt?: number;
   /** Free-form, optional. Kept for backward compat & extra context (e.g. "by the bar"). */
   metAt: string;
   /** ID of linked event, if any. */
@@ -128,6 +142,12 @@ function migrateContact(raw: unknown): Contact {
     };
   }
 
+  const contactType: ContactType =
+    typeof r.contactType === "string" &&
+    (CONTACT_TYPES as readonly string[]).includes(r.contactType)
+      ? (r.contactType as ContactType)
+      : "Lead";
+
   return {
     id: String(r.id ?? crypto.randomUUID()),
     name: String(r.name ?? ""),
@@ -136,6 +156,8 @@ function migrateContact(raw: unknown): Contact {
     email: String(r.email ?? ""),
     phone: String(r.phone ?? ""),
     website: String(r.website ?? ""),
+    contactType,
+    emittedAt: typeof r.emittedAt === "number" ? r.emittedAt : undefined,
     metAt: String(r.metAt ?? ""),
     eventId: typeof r.eventId === "string" ? r.eventId : undefined,
     eventName: typeof r.eventName === "string" ? r.eventName : undefined,
@@ -183,6 +205,8 @@ export function newContact(): Contact {
     email: "",
     phone: "",
     website: "",
+    contactType: "Lead",
+    emittedAt: undefined,
     metAt: "",
     eventId: undefined,
     eventName: undefined,
@@ -252,6 +276,7 @@ export function newEvent(): Event {
     updatedAt: now,
   };
 }
+
 
 export async function countContactsForEvent(eventId: string): Promise<number> {
   const all = await getAllContacts();

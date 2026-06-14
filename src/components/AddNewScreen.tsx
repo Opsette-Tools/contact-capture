@@ -11,11 +11,11 @@ import ContactForm from "./ContactForm";
 import {
   getSelf,
   newContact,
-  putContact,
   todayLocalIso,
   type Contact,
   type Event,
 } from "@/lib/contactsDb";
+import { saveContact } from "@/lib/storage";
 import type { ParsedCard } from "@/lib/ocr";
 
 interface Props {
@@ -117,7 +117,7 @@ export default function AddNewScreen({
   const handleSave = async (values: Contact) => {
     setSaving(true);
     try {
-      await putContact(values);
+      await saveContact(values);
       onSaved();
       setStep("saved");
       message.success("Contact saved");

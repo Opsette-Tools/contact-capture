@@ -1,7 +1,7 @@
 {
   "name": "Contact Capture — Opsette",
   "short_name": "Contacts",
-  "description": "Capture leads and contact details on the go.",
+  "description": "Capture business cards & flyers at networking events — never lose a connection.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

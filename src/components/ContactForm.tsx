@@ -1,9 +1,8 @@
-import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, DatePicker, Form, Input, Select, Space } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import type { Contact, Event, VoiceMemo } from "@/lib/contactsDb";
-import { TAG_SUGGESTIONS } from "@/lib/contactsDb";
+import { CONTACT_TYPES, TAG_SUGGESTIONS } from "@/lib/contactsDb";
 import EventSelect from "./EventSelect";
 import VoiceMemoRecorder from "./VoiceMemoRecorder";
 
@@ -29,10 +28,6 @@ export default function ContactForm({
   saving,
 }: Props) {
   const [form] = Form.useForm<FormValues>();
-  // Show the event picker only if the contact already has one linked, or the
-  // user explicitly clicks "+ Link to event". Keeps the form lean when the
-  // user is just dropping in a contact they didn't meet at an event.
-  const [eventOpen, setEventOpen] = useState<boolean>(!!initial.eventId);
   // Voice memo holds a Blob — kept out of the antd Form values to avoid the
   // "Blob is not a plain object" warnings, and to keep the form value tree
   // strictly serializable.
@@ -45,7 +40,6 @@ export default function ContactForm({
       ...initial,
       metDate: initial.metDate ? dayjs(initial.metDate) : null,
     });
-    setEventOpen(!!initial.eventId);
     setVoiceMemo(initial.voiceMemo);
   }, [initial, form]);
 
@@ -68,14 +62,6 @@ export default function ContactForm({
           : form.getFieldValue("metDate"),
       metAt: form.getFieldValue("metAt") || ev?.location || "",
     });
-  };
-
-  const handleClearEvent = () => {
-    form.setFieldsValue({
-      eventId: undefined,
-      eventName: undefined,
-    });
-    setEventOpen(false);
   };
 
   const handleFinish = async (values: FormValues) => {
@@ -125,6 +111,15 @@ export default function ContactForm({
       <Form.Item label="Position" name="position">
         <Input placeholder="Founder, Sales, VP Marketing…" autoComplete="off" />
       </Form.Item>
+      <Form.Item
+        label="Relationship"
+        name="contactType"
+        tooltip="How you'd categorize this contact. This is the field that carries over when you add them to Opsette."
+      >
+        <Select
+          options={CONTACT_TYPES.map((t) => ({ value: t, label: t }))}
+        />
+      </Form.Item>
       <Form.Item label="Email" name="email">
         <Input placeholder="jane@acme.com" type="email" autoComplete="off" />
       </Form.Item>
@@ -135,45 +130,19 @@ export default function ContactForm({
         <Input placeholder="acme.com" autoComplete="off" />
       </Form.Item>
 
-      {/* Event is optional — hidden by default behind a link, expands inline when clicked. */}
-      {eventOpen ? (
-        <>
-          <Form.Item
-            label={
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                Event
-                <button
-                  type="button"
-                  className="cc-inline-link"
-                  onClick={handleClearEvent}
-                  style={{ fontSize: 12, color: "var(--cc-color-text-muted)" }}
-                >
-                  <CloseOutlined /> Remove
-                </button>
-              </span>
-            }
-            name="eventId"
-          >
-            <EventSelect onEventPicked={handleEventPicked} />
-          </Form.Item>
-          <Form.Item name="eventName" hidden>
-            <Input />
-          </Form.Item>
-        </>
-      ) : (
-        <div style={{ marginBottom: 24 }}>
-          <button
-            type="button"
-            className="cc-inline-link"
-            onClick={() => setEventOpen(true)}
-          >
-            <PlusOutlined /> Link to event
-          </button>
-          {/* Keep eventId/eventName registered so they reset cleanly. */}
-          <Form.Item name="eventId" hidden><Input /></Form.Item>
-          <Form.Item name="eventName" hidden><Input /></Form.Item>
-        </div>
-      )}
+      {/* Every contact belongs to an event. Required — but creating one is a
+          two-second modal (the "+ Create new event…" option), so capture stays
+          fast: make the event once at the booth, every later capture picks it. */}
+      <Form.Item
+        label="Event"
+        name="eventId"
+        rules={[{ required: true, message: "Pick an event or create one" }]}
+      >
+        <EventSelect onEventPicked={handleEventPicked} />
+      </Form.Item>
+      <Form.Item name="eventName" hidden>
+        <Input />
+      </Form.Item>
 
       <Form.Item label="Date met" name="metDate">
         <DatePicker style={{ width: "100%" }} format="MMM D, YYYY" />

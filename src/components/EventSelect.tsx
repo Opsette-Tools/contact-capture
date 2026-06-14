@@ -2,12 +2,8 @@ import { CalendarOutlined, EnvironmentOutlined, PlusOutlined } from "@ant-design
 import { Button, DatePicker, Form, Input, Modal, Select, Space } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
-import {
-  getAllEvents,
-  newEvent,
-  putEvent,
-  type Event,
-} from "@/lib/contactsDb";
+import { newEvent, type Event } from "@/lib/contactsDb";
+import { getAllEvents, saveEvent } from "@/lib/storage";
 
 interface Props {
   value?: string; // event id (injected by Form.Item)
@@ -17,7 +13,6 @@ interface Props {
 }
 
 const NEW_VALUE = "__new__";
-const NONE_VALUE = "__none__";
 
 export default function EventSelect({ value, onChange, onEventPicked, refreshKey }: Props) {
   const [events, setEvents] = useState<Event[]>([]);
@@ -32,7 +27,6 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
 
   const options = useMemo(
     () => [
-      { value: NONE_VALUE, label: "— None —" },
       ...events.map((e) => ({
         value: e.id,
         label: e.date ? `${e.name} · ${dayjs(e.date).format("MMM D, YYYY")}` : e.name,
@@ -45,11 +39,6 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
   const handleSelect = (val: string) => {
     if (val === NEW_VALUE) {
       setCreating(true);
-      return;
-    }
-    if (val === NONE_VALUE) {
-      onChange?.(undefined);
-      onEventPicked?.(undefined);
       return;
     }
     const ev = events.find((e) => e.id === val);
@@ -66,7 +55,7 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
       location: values.location ?? "",
       notes: values.notes ?? "",
     };
-    await putEvent(ev);
+    await saveEvent(ev);
     await load();
     setCreating(false);
     form.resetFields();
@@ -77,7 +66,7 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
   return (
     <>
       <Select
-        value={value ?? NONE_VALUE}
+        value={value}
         onChange={handleSelect}
         options={options}
         placeholder="Select an event"
