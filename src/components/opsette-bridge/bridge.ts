@@ -136,23 +136,19 @@ function isValidEnvelope(
 }
 
 /**
- * Origins worth posting to from *this* page. Posting to an origin that isn't
- * the real parent triggers a noisy (uncatchable) console error, so we narrow
- * the list by environment: localhost parents only when we're on localhost,
- * production origins only when we're not. This keeps the console clean while
- * still trying every origin that could legitimately be the parent.
+ * Post a message to every trusted origin. We can't know the parent's origin in
+ * advance (a deployed tool at tools.opsette.io may be embedded by a LOCAL dev
+ * parent on localhost:8081, by apex opsette.io in prod, etc.), so we post to
+ * all of them and let the browser deliver only to the matching one and drop the
+ * rest. The non-matching posts log a benign "target origin does not match"
+ * console message — that noise is the price of supporting every parent origin,
+ * and is NOT worth filtering: narrowing by the tool's own hostname (an earlier
+ * mistake) stripped localhost:8081 when the deployed tool was embedded by a
+ * local parent, so the handshake never reached it. Match the proven bridge:
+ * post to all, always.
  */
-function postTargets(): readonly string[] {
-  const onLocalhost =
-    typeof window !== 'undefined' &&
-    /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname);
-  return TRUSTED_ORIGINS.filter((o) =>
-    o.startsWith('http://localhost') ? onLocalhost : !onLocalhost,
-  );
-}
-
 function postToAllowedOrigins(message: Record<string, unknown>): void {
-  for (const origin of postTargets()) {
+  for (const origin of TRUSTED_ORIGINS) {
     try {
       window.parent.postMessage(message, origin);
     } catch {
