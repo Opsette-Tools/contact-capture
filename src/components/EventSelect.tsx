@@ -38,9 +38,10 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
 
   const handleSelect = (val: string) => {
     if (val === NEW_VALUE) {
-      // Default the date to today so it's never left blank — it carries over to
-      // the contact's "date met", so a blank here would strand two fields.
-      form.setFieldsValue({ date: dayjs() });
+      // Just open the modal. The default date is applied in afterOpenChange,
+      // once the modal has mounted and the Form instance is actually connected
+      // to its fields — setting it here (form still unmounted) silently fails
+      // and can swallow the click, so the modal never opens.
       setCreating(true);
       return;
     }
@@ -83,6 +84,10 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
         okText="Create event"
         title="New event"
         destroyOnHidden
+        afterOpenChange={(open) => {
+          // Default the date to today once the form is mounted & connected.
+          if (open) form.setFieldsValue({ date: dayjs() });
+        }}
       >
         <Form form={form} layout="vertical" preserve={false}>
           <Form.Item

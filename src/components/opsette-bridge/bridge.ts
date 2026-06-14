@@ -135,8 +135,24 @@ function isValidEnvelope(
   return m.source === MESSAGE_SOURCE && m.version === MESSAGE_VERSION && typeof m.type === 'string';
 }
 
+/**
+ * Origins worth posting to from *this* page. Posting to an origin that isn't
+ * the real parent triggers a noisy (uncatchable) console error, so we narrow
+ * the list by environment: localhost parents only when we're on localhost,
+ * production origins only when we're not. This keeps the console clean while
+ * still trying every origin that could legitimately be the parent.
+ */
+function postTargets(): readonly string[] {
+  const onLocalhost =
+    typeof window !== 'undefined' &&
+    /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname);
+  return TRUSTED_ORIGINS.filter((o) =>
+    o.startsWith('http://localhost') ? onLocalhost : !onLocalhost,
+  );
+}
+
 function postToAllowedOrigins(message: Record<string, unknown>): void {
-  for (const origin of TRUSTED_ORIGINS) {
+  for (const origin of postTargets()) {
     try {
       window.parent.postMessage(message, origin);
     } catch {
