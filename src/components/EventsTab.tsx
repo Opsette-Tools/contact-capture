@@ -73,6 +73,7 @@ export default function EventsTab({
     if (pendingAction.kind === "create") {
       setEditing(newEvent());
       form.resetFields();
+      form.setFieldsValue({ date: dayjs() });
       onPendingActionConsumed?.();
       return;
     }
@@ -82,7 +83,7 @@ export default function EventsTab({
         setEditing(ev);
         form.setFieldsValue({
           name: ev.name,
-          date: ev.date ? dayjs(ev.date) : null,
+          date: ev.date ? dayjs(ev.date) : dayjs(),
           time: ev.time ? dayjs(ev.time, "h:mm A") : null,
           location: ev.location,
           notes: ev.notes,
@@ -98,13 +99,17 @@ export default function EventsTab({
   const openCreate = () => {
     setEditing(newEvent());
     form.resetFields();
+    // Default the date to today so it's never blank (it carries to "date met").
+    form.setFieldsValue({ date: dayjs() });
   };
 
   const openEdit = (ev: Event) => {
     setEditing(ev);
     form.setFieldsValue({
       name: ev.name,
-      date: ev.date ? dayjs(ev.date) : null,
+      // Date is required; default legacy blank-date events to today so editing
+      // one doesn't dead-end on a validation error.
+      date: ev.date ? dayjs(ev.date) : dayjs(),
       time: ev.time ? dayjs(ev.time, "h:mm A") : null,
       location: ev.location,
       notes: ev.notes,
@@ -224,7 +229,11 @@ export default function EventsTab({
           >
             <Input placeholder="Lakeside Networking Night" />
           </Form.Item>
-          <Form.Item label="Date" name="date">
+          <Form.Item
+            label="Date"
+            name="date"
+            rules={[{ required: true, message: "Date is required" }]}
+          >
             <DatePicker style={{ width: "100%" }} format="MMM D, YYYY" />
           </Form.Item>
           <Form.Item label="Time" name="time">

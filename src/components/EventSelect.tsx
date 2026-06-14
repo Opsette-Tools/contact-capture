@@ -38,6 +38,9 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
 
   const handleSelect = (val: string) => {
     if (val === NEW_VALUE) {
+      // Default the date to today so it's never left blank — it carries over to
+      // the contact's "date met", so a blank here would strand two fields.
+      form.setFieldsValue({ date: dayjs() });
       setCreating(true);
       return;
     }
@@ -69,7 +72,7 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
         value={value}
         onChange={handleSelect}
         options={options}
-        placeholder="Select an event"
+        placeholder="Select an event or create one"
         showSearch
         optionFilterProp="label"
       />
@@ -89,7 +92,11 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
           >
             <Input placeholder="Lakeside Networking Night" prefix={<PlusOutlined />} />
           </Form.Item>
-          <Form.Item label="Date" name="date">
+          <Form.Item
+            label="Date"
+            name="date"
+            rules={[{ required: true, message: "Date is required" }]}
+          >
             <DatePicker style={{ width: "100%" }} suffixIcon={<CalendarOutlined />} />
           </Form.Item>
           <Form.Item label="Location" name="location">

@@ -96,7 +96,7 @@ export default function ContactForm({
         metDate: initial.metDate ? dayjs(initial.metDate) : null,
       }}
       onFinish={handleFinish}
-      requiredMark={false}
+      requiredMark
     >
       <Form.Item
         label="Name"
