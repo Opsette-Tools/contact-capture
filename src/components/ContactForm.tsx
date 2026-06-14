@@ -162,11 +162,15 @@ export default function ContactForm({
       <Form.Item label="Follow-up action" name="followUp">
         <Input placeholder="Send portfolio, schedule call…" autoComplete="off" />
       </Form.Item>
-      <Form.Item label="Tags" name="tags">
+      <Form.Item
+        label="Tags"
+        name="tags"
+        tooltip="Context for your own memory — how hot the lead is, where you met, what's next. Different from Relationship (that's the one field that carries to Opsette)."
+      >
         <Select<string[]>
           mode="tags"
           allowClear
-          placeholder="Type a tag and press Enter"
+          placeholder="Hot, Follow up, Met at booth…"
           tokenSeparators={[","]}
           options={TAG_SUGGESTIONS.map((t) => ({ value: t, label: t }))}
         />

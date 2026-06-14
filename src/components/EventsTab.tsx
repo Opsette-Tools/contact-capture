@@ -1,20 +1,16 @@
 import {
   CalendarOutlined,
   ClockCircleOutlined,
-  DeleteOutlined,
-  EditOutlined,
   EnvironmentOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
 import {
   Button,
   DatePicker,
-  Empty,
   Form,
   Input,
   List,
   Modal,
-  Popconfirm,
   Space,
   Tag,
   TimePicker,
@@ -22,35 +18,40 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { newEvent, type Event } from "@/lib/contactsDb";
 import {
   countContactsForEvent,
-  deleteEvent,
   getAllEvents,
   saveEvent,
 } from "@/lib/storage";
+import EmptyState from "./EmptyState";
 
 interface Props {
-  /** When set, EventsTab opens the matching modal once on mount/change.
-   *  - { kind: "create" } opens a blank New Event modal.
-   *  - { kind: "edit", eventId } opens the modal pre-loaded with that event.
-   *  Each new pendingAction value triggers one open; pass a fresh object to
-   *  open again. Index passes undefined when nothing should auto-open. */
-  pendingAction?: { kind: "create" } | { kind: "edit"; eventId: string };
-  /** Called after pendingAction has been consumed, so Index can clear it. */
-  onPendingActionConsumed?: () => void;
-  /** Fires after any save/delete so Index can re-check the active event. */
+  /** When set, EventsTab opens a blank New Event modal once on mount/change.
+   *  Used by the home-screen "New event" CTA. */
+  pendingCreate?: boolean;
+  /** Called after the create modal has been auto-opened, so the host can clear
+   *  the flag. */
+  onPendingConsumed?: () => void;
+  /** Fires after any save so the host can re-check the active event. */
   onChange?: () => void;
 }
 
+/**
+ * Events list + create. Tapping a row routes to /event/:id (the browsable event
+ * page, which owns edit/delete/bulk-emit). Creating happens in a quick modal
+ * here so you can spin up an event without leaving the list.
+ */
 export default function EventsTab({
-  pendingAction,
-  onPendingActionConsumed,
+  pendingCreate,
+  onPendingConsumed,
   onChange,
 }: Props) {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [editing, setEditing] = useState<Event | null>(null);
+  const [creating, setCreating] = useState(false);
   const [form] = Form.useForm();
 
   const load = async () => {
@@ -66,97 +67,59 @@ export default function EventsTab({
     void load();
   }, []);
 
-  // Consume pendingAction once events have loaded (so edit can find the event
-  // by id). Re-fires whenever pendingAction reference changes.
   useEffect(() => {
-    if (!pendingAction) return;
-    if (pendingAction.kind === "create") {
-      setEditing(newEvent());
-      form.resetFields();
-      form.setFieldsValue({ date: dayjs() });
-      onPendingActionConsumed?.();
-      return;
-    }
-    if (pendingAction.kind === "edit") {
-      const ev = events.find((e) => e.id === pendingAction.eventId);
-      if (ev) {
-        setEditing(ev);
-        form.setFieldsValue({
-          name: ev.name,
-          date: ev.date ? dayjs(ev.date) : dayjs(),
-          time: ev.time ? dayjs(ev.time, "h:mm A") : null,
-          location: ev.location,
-          notes: ev.notes,
-        });
-        onPendingActionConsumed?.();
-      }
-      // If event not yet loaded, leave pendingAction in place; this effect
-      // re-runs when `events` updates.
+    if (pendingCreate) {
+      setCreating(true);
+      onPendingConsumed?.();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingAction, events]);
+  }, [pendingCreate]);
 
-  const openCreate = () => {
-    setEditing(newEvent());
-    form.resetFields();
-    // Default the date to today so it's never blank (it carries to "date met").
-    form.setFieldsValue({ date: dayjs() });
-  };
-
-  const openEdit = (ev: Event) => {
-    setEditing(ev);
-    form.setFieldsValue({
-      name: ev.name,
-      // Date is required; default legacy blank-date events to today so editing
-      // one doesn't dead-end on a validation error.
-      date: ev.date ? dayjs(ev.date) : dayjs(),
-      time: ev.time ? dayjs(ev.time, "h:mm A") : null,
-      location: ev.location,
-      notes: ev.notes,
-    });
-  };
-
-  const handleSave = async () => {
-    if (!editing) return;
+  const handleCreate = async () => {
     const values = await form.validateFields();
-    const updated: Event = {
-      ...editing,
+    const ev: Event = {
+      ...newEvent(),
       name: values.name,
       date: values.date ? dayjs(values.date).format("YYYY-MM-DD") : "",
       time: values.time ? dayjs(values.time).format("h:mm A") : "",
       location: values.location ?? "",
       notes: values.notes ?? "",
-      updatedAt: Date.now(),
     };
-    await saveEvent(updated);
-    setEditing(null);
+    await saveEvent(ev);
+    setCreating(false);
+    form.resetFields();
     await load();
     onChange?.();
-    message.success("Event saved");
-  };
-
-  const handleDelete = async (id: string) => {
-    await deleteEvent(id);
-    await load();
-    onChange?.();
-    message.success("Event deleted");
+    message.success("Event created");
+    // Drop straight into the new event so the user can start capturing under it.
+    navigate(`/event/${ev.id}`);
   };
 
   return (
     <div className="cc-stack">
-      <Button type="primary" icon={<PlusOutlined />} block size="large" onClick={openCreate}>
+      <Button
+        type="primary"
+        icon={<PlusOutlined />}
+        block
+        size="large"
+        onClick={() => setCreating(true)}
+      >
         New event
       </Button>
 
       {events.length === 0 ? (
-        <Empty description="No events yet. Create one before your next networking session." />
+        <EmptyState
+          icon={<CalendarOutlined />}
+          title="No events yet"
+          description="Create one for your next mixer or conference, then capture every card under it."
+        />
       ) : (
         <List
           dataSource={events}
           renderItem={(ev) => (
             <List.Item
               className="cc-list-item"
-              onClick={() => openEdit(ev)}
+              onClick={() => navigate(`/event/${ev.id}`)}
               actions={[
                 <Tag key="count" color="blue">
                   {counts[ev.id] ?? 0} contact{(counts[ev.id] ?? 0) === 1 ? "" : "s"}
@@ -191,35 +154,15 @@ export default function EventsTab({
       )}
 
       <Modal
-        open={!!editing}
-        onCancel={() => setEditing(null)}
-        title={editing && events.find((e) => e.id === editing.id) ? "Edit event" : "New event"}
-        footer={
-          <Space style={{ width: "100%", justifyContent: "space-between" }}>
-            {editing && events.find((e) => e.id === editing.id) ? (
-              <Popconfirm
-                title="Delete this event?"
-                description="Linked contacts keep the event name as a snapshot."
-                okText="Delete"
-                okButtonProps={{ danger: true }}
-                onConfirm={() => editing && handleDelete(editing.id)}
-              >
-                <Button danger icon={<DeleteOutlined />}>
-                  Delete
-                </Button>
-              </Popconfirm>
-            ) : (
-              <span />
-            )}
-            <Space>
-              <Button onClick={() => setEditing(null)}>Cancel</Button>
-              <Button type="primary" onClick={handleSave}>
-                Save
-              </Button>
-            </Space>
-          </Space>
-        }
+        open={creating}
+        onCancel={() => setCreating(false)}
+        onOk={handleCreate}
+        okText="Create event"
+        title="New event"
         destroyOnHidden
+        afterOpenChange={(open) => {
+          if (open) form.setFieldsValue({ date: dayjs() });
+        }}
       >
         <Form form={form} layout="vertical" preserve={false}>
           <Form.Item

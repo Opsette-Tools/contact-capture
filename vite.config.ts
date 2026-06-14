@@ -8,7 +8,7 @@ export default defineConfig(({ command }) => ({
   base: command === "build" ? "/contact-capture/" : "/",
   server: {
     host: "::",
-    port: 8080,
+    port: 8101,
     hmr: {
       overlay: false,
     },

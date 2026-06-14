@@ -49,15 +49,17 @@ export function buildAntTheme(isDark: boolean): ThemeConfig {
   };
 }
 
-// antd Tag preset colors. We map well-known suggested tags to specific colors,
-// and hash any other (free-form) tag onto one of the remaining presets so the
-// same custom tag always renders in the same color.
+// antd Tag preset colors. We map well-known suggested CONTEXT tags to specific
+// colors, and hash any other (free-form) tag onto one of the remaining presets
+// so the same custom tag always renders in the same color. (Tags are context,
+// not relationship — Relationship has its own field. Re-scoped 2026-06-14.)
 const KNOWN_TAG_COLORS: Record<string, string> = {
-  Lead: "green",
-  Client: "blue",
-  Partner: "purple",
-  Connection: "default",
-  Investor: "gold",
+  Hot: "volcano",
+  "Follow up": "blue",
+  "Met at booth": "cyan",
+  Referral: "green",
+  "Investor intro": "gold",
+  "Keep warm": "orange",
 };
 
 const FALLBACK_TAG_PALETTE = [

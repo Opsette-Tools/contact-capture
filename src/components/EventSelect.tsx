@@ -1,5 +1,11 @@
-import { CalendarOutlined, EnvironmentOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, DatePicker, Form, Input, Modal, Select, Space } from "antd";
+import {
+  CalendarOutlined,
+  ClockCircleOutlined,
+  EditOutlined,
+  EnvironmentOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
+import { Button, DatePicker, Form, Input, Modal, Select, TimePicker } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { newEvent, type Event } from "@/lib/contactsDb";
@@ -16,7 +22,12 @@ const NEW_VALUE = "__new__";
 
 export default function EventSelect({ value, onChange, onEventPicked, refreshKey }: Props) {
   const [events, setEvents] = useState<Event[]>([]);
+  // The modal is dual-purpose: `creating` holds a draft for a new event, while
+  // `editing` holds the existing event being corrected in place. Exactly one is
+  // set when the modal is open. Sharing one modal keeps the form logic in one
+  // spot and lets a just-created typo'd event be fixed without a duplicate.
   const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<Event | null>(null);
   const [form] = Form.useForm();
 
   const load = async () => setEvents(await getAllEvents());
@@ -24,6 +35,14 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
   useEffect(() => {
     void load();
   }, [refreshKey]);
+
+  // The currently-selected event (if any) — drives the inline "Edit" affordance.
+  const selectedEvent = useMemo(
+    () => events.find((e) => e.id === value),
+    [events, value],
+  );
+
+  const modalOpen = creating || editing !== null;
 
   const options = useMemo(
     () => [
@@ -50,43 +69,79 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
     onEventPicked?.(ev);
   };
 
-  const handleCreate = async () => {
+  const openEditSelected = () => {
+    if (!selectedEvent) return;
+    setEditing(selectedEvent);
+  };
+
+  const closeModal = () => {
+    setCreating(false);
+    setEditing(null);
+    form.resetFields();
+  };
+
+  const handleSubmit = async () => {
     const values = await form.validateFields();
+    const base = editing ?? newEvent();
     const ev: Event = {
-      ...newEvent(),
+      ...base,
       name: values.name,
       date: values.date ? dayjs(values.date).format("YYYY-MM-DD") : "",
+      time: values.time ? dayjs(values.time).format("h:mm A") : "",
       location: values.location ?? "",
       notes: values.notes ?? "",
+      updatedAt: Date.now(),
     };
     await saveEvent(ev);
     await load();
-    setCreating(false);
-    form.resetFields();
+    closeModal();
     onChange?.(ev.id);
     onEventPicked?.(ev);
   };
 
   return (
     <>
-      <Select
-        value={value}
-        onChange={handleSelect}
-        options={options}
-        placeholder="Select an event or create one"
-        showSearch
-        optionFilterProp="label"
-      />
+      <div className="cc-event-select-row">
+        <Select
+          value={value}
+          onChange={handleSelect}
+          options={options}
+          placeholder="Select an event or create one"
+          showSearch
+          optionFilterProp="label"
+          style={{ flex: 1, minWidth: 0 }}
+        />
+        {selectedEvent && (
+          <Button
+            icon={<EditOutlined />}
+            onClick={openEditSelected}
+            aria-label="Edit selected event"
+            title="Edit this event"
+          />
+        )}
+      </div>
       <Modal
-        open={creating}
-        onCancel={() => setCreating(false)}
-        onOk={handleCreate}
-        okText="Create event"
-        title="New event"
+        open={modalOpen}
+        onCancel={closeModal}
+        onOk={handleSubmit}
+        okText={editing ? "Save event" : "Create event"}
+        title={editing ? "Edit event" : "New event"}
         destroyOnHidden
         afterOpenChange={(open) => {
-          // Default the date to today once the form is mounted & connected.
-          if (open) form.setFieldsValue({ date: dayjs() });
+          if (!open) return;
+          // Pre-fill once the form is mounted & connected. Editing loads the
+          // event's values; creating defaults the date to today.
+          if (editing) {
+            form.setFieldsValue({
+              name: editing.name,
+              date: editing.date ? dayjs(editing.date) : dayjs(),
+              time: editing.time ? dayjs(editing.time, "h:mm A") : null,
+              location: editing.location,
+              notes: editing.notes,
+            });
+          } else {
+            form.setFieldsValue({ date: dayjs() });
+          }
         }}
       >
         <Form form={form} layout="vertical" preserve={false}>
@@ -102,7 +157,16 @@ export default function EventSelect({ value, onChange, onEventPicked, refreshKey
             name="date"
             rules={[{ required: true, message: "Date is required" }]}
           >
-            <DatePicker style={{ width: "100%" }} suffixIcon={<CalendarOutlined />} />
+            <DatePicker style={{ width: "100%" }} format="MMM D, YYYY" suffixIcon={<CalendarOutlined />} />
+          </Form.Item>
+          <Form.Item label="Time" name="time">
+            <TimePicker
+              style={{ width: "100%" }}
+              format="h:mm A"
+              minuteStep={5}
+              use12Hours
+              suffixIcon={<ClockCircleOutlined />}
+            />
           </Form.Item>
           <Form.Item label="Location" name="location">
             <Input placeholder="Grill's Lakeside, Orange Blossom Trail" prefix={<EnvironmentOutlined />} />

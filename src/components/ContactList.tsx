@@ -1,25 +1,23 @@
 import {
-  CalendarOutlined,
   DownloadOutlined,
   IdcardOutlined,
+  PlusOutlined,
   SearchOutlined,
+  TeamOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Avatar, Button, Dropdown, Empty, Input, List, Space, Tag } from "antd";
+import { Avatar, Button, Dropdown, Input, List, Space, Tag } from "antd";
 import { useMemo, useState } from "react";
-import type { Contact, Event } from "@/lib/contactsDb";
+import type { Contact } from "@/lib/contactsDb";
 import { shareContactsCsv, shareContactsVcard } from "@/lib/exporters";
 import { colorForTag } from "@/lib/theme";
+import EmptyState from "./EmptyState";
 import TagBadge from "./TagBadge";
 
 interface Props {
   contacts: Contact[];
   onSelect: (c: Contact) => void;
   onAddNew: () => void;
-  /** Active event matching today's date (if any). Drives the pinned banner. */
-  activeEvent?: Event;
-  /** Edit the active event (opens EventsTab modal scoped to that event). */
-  onEditActiveEvent?: (ev: Event) => void;
   /** Open the My Card drawer. */
   onOpenMyCard: () => void;
 }
@@ -34,8 +32,6 @@ export default function ContactList({
   contacts,
   onSelect,
   onAddNew,
-  activeEvent,
-  onEditActiveEvent,
   onOpenMyCard,
 }: Props) {
   const [query, setQuery] = useState("");
@@ -50,16 +46,6 @@ export default function ContactList({
     }
     return ["All", ...Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).map(([t]) => t)];
   }, [contacts]);
-
-  const tonightCount = useMemo(() => {
-    if (!activeEvent) return 0;
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayMs = todayStart.getTime();
-    return contacts.filter(
-      (c) => c.eventId === activeEvent.id && c.createdAt >= todayMs,
-    ).length;
-  }, [contacts, activeEvent]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -77,39 +63,6 @@ export default function ContactList({
 
   return (
     <div className="cc-stack">
-      {activeEvent && (
-        <div
-          className="cc-active-event"
-          role="button"
-          tabIndex={0}
-          onClick={() => onEditActiveEvent?.(activeEvent)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onEditActiveEvent?.(activeEvent);
-            }
-          }}
-        >
-          <CalendarOutlined style={{ fontSize: 22, color: "var(--cc-color-accent)" }} />
-          <div className="cc-active-event-body">
-            <div className="cc-active-event-eyebrow">Today's event</div>
-            <div className="cc-active-event-name">{activeEvent.name || "(Untitled event)"}</div>
-            <div className="cc-active-event-meta">
-              {[
-                activeEvent.time,
-                activeEvent.location,
-                `${tonightCount} captured today`,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </div>
-          </div>
-          <Tag color="blue" style={{ flex: "0 0 auto" }}>
-            {tonightCount}
-          </Tag>
-        </div>
-      )}
-
       <div className="cc-row" style={{ gap: 8 }}>
         <Input
           size="large"
@@ -168,17 +121,24 @@ export default function ContactList({
       )}
 
       {filtered.length === 0 ? (
-        <Empty
-          description={
-            contacts.length === 0
-              ? "No contacts yet. Add your first one."
-              : "No contacts match your filters."
-          }
-        >
-          {contacts.length === 0 && (
-            <a onClick={onAddNew}>Add a contact</a>
-          )}
-        </Empty>
+        contacts.length === 0 ? (
+          <EmptyState
+            icon={<TeamOutlined />}
+            title="No contacts yet"
+            description="Scan a card or QR at your next event — every connection lands here."
+            action={
+              <Button type="primary" icon={<PlusOutlined />} onClick={onAddNew}>
+                Add your first contact
+              </Button>
+            }
+          />
+        ) : (
+          <EmptyState
+            icon={<SearchOutlined />}
+            title="No matches"
+            description="No contacts match your search or filter. Try clearing them."
+          />
+        )
       ) : (
         <List
           dataSource={filtered}

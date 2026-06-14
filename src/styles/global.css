@@ -14,7 +14,7 @@
   --cc-color-primary: #1f2937;
   --cc-color-accent: #3b82f6;
 
-  --cc-bottom-nav-h: 96px;
+  --cc-bottom-nav-h: 64px;
   --cc-header-h: 56px;
 }
 
@@ -52,11 +52,9 @@ body {
   flex-direction: column;
 }
 
-/* Reserve space for the fixed bottom nav on mobile only. */
-@media (max-width: 767px) {
-  .cc-app {
-    padding-bottom: calc(var(--cc-bottom-nav-h) + env(safe-area-inset-bottom));
-  }
+/* Reserve space for the fixed bottom nav (primary nav on every width now). */
+.cc-app {
+  padding-bottom: calc(var(--cc-bottom-nav-h) + env(safe-area-inset-bottom));
 }
 
 .cc-header {
@@ -145,11 +143,16 @@ body {
 
 /* ---------- Bottom nav ---------- */
 
+/* Fixed, bottom-centered bar. Capped to the page width and centered via
+ * left:50% + translateX(-50%) so on desktop it lines up with the content card
+ * instead of stretching edge-to-edge; on mobile the cap ~= full width. */
 .cc-bottom-nav {
   position: fixed;
-  left: 0;
-  right: 0;
   bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--cc-page-max);
   z-index: 20;
   background: var(--cc-color-surface);
   border-top: 1px solid var(--cc-color-border-soft);
@@ -157,6 +160,18 @@ body {
   display: flex;
   align-items: stretch;
   justify-content: space-around;
+}
+
+/* Desktop: match the wider content card and round the top corners so it reads
+ * as a contained bar, not a stuck-on strip. */
+@media (min-width: 768px) {
+  .cc-bottom-nav {
+    max-width: var(--cc-desktop-max);
+    border: 1px solid var(--cc-color-border-soft);
+    border-bottom: none;
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -2px 12px -4px rgba(0, 0, 0, 0.08);
+  }
 }
 
 .cc-bottom-nav-btn {
@@ -183,31 +198,11 @@ body {
 }
 
 .cc-bottom-nav-btn[data-active="true"] {
-  color: var(--cc-color-primary);
+  color: var(--cc-color-accent);
 }
 
-/* Floating + button. The circle is rendered with ::before centered around the
- * icon (which is its own grid item via flex-direction column). No negative
- * margins — the circle sizes itself to enclose the icon, and the label sits
- * naturally below. */
-.cc-bottom-nav-btn[data-primary="true"] {
-  position: relative;
-  color: var(--cc-color-text-muted);
-}
-
-.cc-bottom-nav-btn[data-primary="true"] .anticon {
-  position: relative;
-  z-index: 1;
-  width: 48px;
-  height: 48px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--cc-color-primary);
-  color: var(--cc-color-bg);
-  font-size: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+.cc-bottom-nav-btn:hover {
+  color: var(--cc-color-text);
 }
 
 /* Mobile sizing block — gated so desktop stays close to current. iOS Safari
@@ -765,6 +760,307 @@ body {
   font-size: 13px;
   color: var(--cc-color-text-muted);
   margin-top: 2px;
+}
+
+/* ---------- Page title ---------- */
+
+.cc-page-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cc-color-text);
+  margin: 0 0 16px;
+}
+
+/* ---------- Home: layout rhythm ---------- */
+
+.cc-home {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cc-home-section {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Home: capture hero ---------- */
+
+.cc-capture-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  padding: 32px 20px;
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(135deg, var(--cc-color-primary), #374151);
+  box-shadow: 0 10px 24px -8px rgba(31, 41, 55, 0.45);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.cc-capture-hero:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px -8px rgba(31, 41, 55, 0.55);
+}
+
+.cc-capture-hero:active {
+  transform: translateY(0);
+}
+
+.cc-capture-hero-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 30px;
+  margin-bottom: 6px;
+}
+
+.cc-capture-hero-label {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.cc-capture-hero-sub {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.dark .cc-capture-hero {
+  background: linear-gradient(135deg, #1f2937, #0b0f17);
+  box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.7);
+}
+
+/* ---------- Home: tonight's event ---------- */
+
+.cc-home-event {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border: 1px solid var(--cc-color-border-soft);
+  border-radius: 12px;
+  background: var(--cc-color-bg);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cc-home-event:hover {
+  background: var(--cc-color-border-soft);
+  border-color: var(--cc-color-border);
+}
+
+.cc-home-event--empty {
+  cursor: default;
+}
+
+.cc-home-event--empty:hover {
+  background: var(--cc-color-bg);
+  border-color: var(--cc-color-border-soft);
+}
+
+.cc-home-event-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--cc-color-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cc-home-event-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cc-color-text);
+  margin-top: 4px;
+}
+
+.cc-home-event-tally {
+  font-size: 13px;
+  color: var(--cc-color-text-muted);
+  margin-top: 3px;
+}
+
+.cc-home-event-tally a {
+  color: var(--cc-color-accent);
+  cursor: pointer;
+}
+
+/* ---------- Home: tonight's catches ---------- */
+
+.cc-home-section-head {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cc-color-text-muted);
+  margin-bottom: 10px;
+}
+
+.cc-home-catches {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cc-home-catch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid var(--cc-color-border-soft);
+  border-radius: 12px;
+  background: var(--cc-color-surface);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cc-home-catch:hover {
+  background: var(--cc-color-border-soft);
+  border-color: var(--cc-color-border);
+}
+
+.cc-home-catch-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cc-home-catch-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cc-color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cc-home-catch-sub {
+  font-size: 13px;
+  color: var(--cc-color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cc-home-catch-arrow {
+  color: var(--cc-color-text-muted);
+  font-size: 13px;
+  flex: 0 0 auto;
+}
+
+/* ---------- Empty states ---------- */
+
+.cc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 24px;
+  gap: 6px;
+}
+
+.cc-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  margin-bottom: 10px;
+  background: var(--cc-color-border-soft);
+  color: var(--cc-color-accent);
+  font-size: 30px;
+}
+
+.cc-empty-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--cc-color-text);
+}
+
+.cc-empty-desc {
+  font-size: 14px;
+  color: var(--cc-color-text-muted);
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.cc-empty-action {
+  margin-top: 14px;
+}
+
+/* ---------- Event picker (inline edit affordance) ---------- */
+
+.cc-event-select-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- Event detail drawer ---------- */
+
+.cc-event-detail-head {
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--cc-color-border-soft);
+}
+
+.cc-event-detail-meta {
+  color: var(--cc-color-text-muted);
+  font-size: 14px;
+}
+
+.cc-event-detail-meta .anticon {
+  margin-right: 4px;
+}
+
+.cc-event-detail-notes {
+  margin: 10px 0 0;
+  color: var(--cc-color-text);
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+.cc-event-detail-count {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cc-color-text);
+}
+
+.cc-event-detail-count-sub {
+  font-weight: 500;
+  color: var(--cc-color-text-muted);
+}
+
+/* Bulk "Add to Opsette" action bar inside the event drawer. */
+.cc-bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--cc-color-bg);
+  border: 1px solid var(--cc-color-border-soft);
+  border-radius: 10px;
+}
+
+/* "In Opsette" confirmation tag on an emitted contact row. */
+.cc-emitted-tag.ant-tag {
+  flex: 0 0 auto;
+  font-weight: 500;
 }
 
 /* ---------- Voice memo ---------- */

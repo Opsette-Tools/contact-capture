@@ -32,6 +32,8 @@ import {
   getActiveEvent as idbGetActiveEvent,
   getAllContacts as idbGetAllContacts,
   getAllEvents as idbGetAllEvents,
+  getContact as idbGetContact,
+  getEvent as idbGetEvent,
   putContact as idbPutContact,
   putEvent as idbPutEvent,
   deleteContact as idbDeleteContact,
@@ -165,6 +167,48 @@ export async function emitContactToOpsette(contact: Contact): Promise<string> {
   return inbox_id;
 }
 
+export interface BulkEmitResult {
+  /** Contacts newly emitted in this run. */
+  sent: Contact[];
+  /** Contacts skipped because they were already emitted (had emittedAt). */
+  skipped: Contact[];
+  /** Per-contact failures: the contact and the error message. */
+  failed: { contact: Contact; error: string }[];
+}
+
+/**
+ * Emit many contacts to the Opsette inbox in one action — the "Send all from
+ * this event" path. Already-emitted contacts (with an `emittedAt`) are skipped
+ * so re-running doesn't create duplicate inbox items. Emits sequentially so a
+ * single failure is attributed to the right contact and doesn't abort the rest.
+ * Returns a summary the caller turns into a toast. Throws only if not embedded.
+ */
+export async function emitContactsToOpsette(
+  contacts: Contact[],
+): Promise<BulkEmitResult> {
+  const s = await initStorage();
+  if (!s.bridge) {
+    throw new Error("Not embedded in Opsette — emit is unavailable.");
+  }
+  const result: BulkEmitResult = { sent: [], skipped: [], failed: [] };
+  for (const contact of contacts) {
+    if (contact.emittedAt) {
+      result.skipped.push(contact);
+      continue;
+    }
+    try {
+      await emitContactToOpsette(contact);
+      result.sent.push(contact);
+    } catch (err) {
+      result.failed.push({
+        contact,
+        error: err instanceof Error ? err.message : "Emit failed",
+      });
+    }
+  }
+  return result;
+}
+
 // ── best-effort shared-store mirror ──────────────────────────────────────────
 
 /**
@@ -218,6 +262,18 @@ export async function getAllEvents(): Promise<Event[]> {
   return idbGetAllEvents();
 }
 
+/** One contact by id — used by the routed contact page to hydrate from the URL. */
+export async function getContact(id: string): Promise<Contact | undefined> {
+  await initStorage();
+  return idbGetContact(id);
+}
+
+/** One event by id — used by the routed event page to hydrate from the URL. */
+export async function getEvent(id: string): Promise<Event | undefined> {
+  await initStorage();
+  return idbGetEvent(id);
+}
+
 export async function saveContact(contact: Contact): Promise<void> {
   const s = await initStorage();
   // IndexedDB is the source of truth — await this so the UI reflects the save.
@@ -250,6 +306,12 @@ export async function deleteEvent(id: string): Promise<void> {
 export async function countContactsForEvent(eventId: string): Promise<number> {
   const all = await getAllContacts();
   return all.filter((c) => c.eventId === eventId).length;
+}
+
+/** All contacts linked to an event, newest first (inherits getAllContacts sort). */
+export async function getContactsForEvent(eventId: string): Promise<Contact[]> {
+  const all = await getAllContacts();
+  return all.filter((c) => c.eventId === eventId);
 }
 
 /**

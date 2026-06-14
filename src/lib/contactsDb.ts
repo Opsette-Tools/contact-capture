@@ -1,11 +1,20 @@
 import { openDB, type IDBPDatabase } from "idb";
 
+/**
+ * Free-form context tags — the memorable *situation/intent* of a contact, NOT
+ * their relationship category. Relationship (Lead/Client/Vendor) is its own
+ * constrained field (see CONTACT_TYPES) and the only thing that crosses into
+ * Opsette. Tags stay local & rich, so these suggestions are about context:
+ * how hot the lead is, where you met them, what to do next. Users can still
+ * type any custom tag. (Re-scoped 2026-06-14 to stop colliding with Relationship.)
+ */
 export const TAG_SUGGESTIONS = [
-  "Lead",
-  "Client",
-  "Partner",
-  "Connection",
-  "Investor",
+  "Hot",
+  "Follow up",
+  "Met at booth",
+  "Referral",
+  "Investor intro",
+  "Keep warm",
 ] as const;
 
 export interface Event {
@@ -113,7 +122,8 @@ function getDb() {
 /**
  * Bring older records up to the current Contact shape.
  * - Maps the legacy single `tag` ("Hot" | "Maybe" | "Friend") to the new `tags` array.
- *   "Hot" → "Lead", "Maybe"/"Friend" → "Connection". Custom strings pass through.
+ *   "Hot" → "Hot", "Maybe"/"Friend" → "Keep warm" (context tags, post-2026-06-14
+ *   re-scope). Custom strings pass through.
  * - Defaults missing string fields to "".
  * - position / voiceMemo default to "" / undefined for pre-v3 records.
  */
@@ -127,8 +137,8 @@ function migrateContact(raw: unknown): Contact {
     tags = r.tags.filter((t): t is string => typeof t === "string" && t.trim() !== "");
   } else if (typeof r.tag === "string" && r.tag.trim() !== "") {
     const legacy = r.tag.trim();
-    if (legacy === "Hot") tags = ["Lead"];
-    else if (legacy === "Maybe" || legacy === "Friend") tags = ["Connection"];
+    if (legacy === "Hot") tags = ["Hot"];
+    else if (legacy === "Maybe" || legacy === "Friend") tags = ["Keep warm"];
     else tags = [legacy];
   }
 

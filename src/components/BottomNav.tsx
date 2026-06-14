@@ -1,43 +1,40 @@
-import { CalendarOutlined, PlusOutlined, TeamOutlined } from "@ant-design/icons";
+import { CameraOutlined, CalendarOutlined, TeamOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
-export type BottomNavKey = "list" | "add" | "events";
+export type BottomNavKey = "home" | "people" | "events";
 
 interface Props {
   active: BottomNavKey;
-  onChange: (key: BottomNavKey) => void;
+  /** Optional override; by default each item routes to its page. */
+  onChange?: (key: BottomNavKey) => void;
 }
 
+const ITEMS: { key: BottomNavKey; label: string; path: string; icon: React.ReactNode }[] = [
+  { key: "home", label: "Capture", path: "/", icon: <CameraOutlined /> },
+  { key: "people", label: "People", path: "/people", icon: <TeamOutlined /> },
+  { key: "events", label: "Events", path: "/events", icon: <CalendarOutlined /> },
+];
+
 export default function BottomNav({ active, onChange }: Props) {
+  const navigate = useNavigate();
   return (
     <nav className="cc-bottom-nav" aria-label="Primary">
-      <button
-        type="button"
-        className="cc-bottom-nav-btn"
-        data-active={active === "list"}
-        onClick={() => onChange("list")}
-      >
-        <TeamOutlined />
-        <span>Contacts</span>
-      </button>
-      <button
-        type="button"
-        className="cc-bottom-nav-btn"
-        data-primary="true"
-        onClick={() => onChange("add")}
-        aria-label="Add contact"
-      >
-        <PlusOutlined />
-        <span>Add</span>
-      </button>
-      <button
-        type="button"
-        className="cc-bottom-nav-btn"
-        data-active={active === "events"}
-        onClick={() => onChange("events")}
-      >
-        <CalendarOutlined />
-        <span>Events</span>
-      </button>
+      {ITEMS.map((item) => (
+        <button
+          key={item.key}
+          type="button"
+          className="cc-bottom-nav-btn"
+          data-active={active === item.key}
+          aria-current={active === item.key ? "page" : undefined}
+          onClick={() => {
+            if (onChange) onChange(item.key);
+            navigate(item.path);
+          }}
+        >
+          {item.icon}
+          <span>{item.label}</span>
+        </button>
+      ))}
     </nav>
   );
 }
