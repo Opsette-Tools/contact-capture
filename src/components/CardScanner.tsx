@@ -10,6 +10,9 @@ import CameraCapture from "./CameraCapture";
 import QrScanner from "./QrScanner";
 import { runOcr, type ParsedCard } from "@/lib/ocr";
 import { parseVcard } from "@/lib/parseVcard";
+import { parseDigitalCardUrl } from "@/lib/parseDigitalCardUrl";
+import { decodeQrFromImage } from "@/lib/decodeQrImage";
+import type { Contact } from "@/lib/contactsDb";
 
 interface Props {
   onParsed: (parsed: ParsedCard) => void;
@@ -25,12 +28,49 @@ export default function CardScanner({ onParsed, onSkip }: Props) {
   const [qrOpen, setQrOpen] = useState(false);
   const systemCameraRef = useRef<HTMLInputElement | null>(null);
 
+  // Turn a decoded QR string into a prefilled contact. Two shapes are ours:
+  //   1. A raw vCard (native Contact Capture QR)      -> parseVcard
+  //   2. A Digital Card share URL (#/?data=<base64>)  -> parseDigitalCardUrl
+  // Anything else is genuine garbage and returns null so the caller errors.
+  const parseQrPayload = (decoded: string): Partial<Contact> | null => {
+    return parseVcard(decoded) ?? parseDigitalCardUrl(decoded);
+  };
+
+  // Forward a recognized QR to the same prefill path OCR uses. Missing fields
+  // land as empty strings; the active-event banner auto-prefill (Tier 2)
+  // layers any event context on top in AddNewScreen / ContactForm.
+  const prefillFromQr = (raw: string, parsed: Partial<Contact>) => {
+    onParsed({
+      name: parsed.name ?? "",
+      company: parsed.company ?? "",
+      position: parsed.position ?? "",
+      email: parsed.email ?? "",
+      phone: parsed.phone ?? "",
+      website: parsed.website ?? "",
+      raw,
+      source: "qr",
+    });
+  };
+
   const handleFile = async (file: File | Blob) => {
     setError(null);
     setProgress(0);
     setRunning(true);
     setPreviewUrl(URL.createObjectURL(file));
     try {
+      // A photo/screenshot might BE a QR (the no-camera phone-test path, or
+      // someone snapping a card's QR instead of its text). Try that first —
+      // it's exact when it hits, and far better than running OCR over a QR.
+      const qr = await decodeQrFromImage(file);
+      if (qr) {
+        const parsed = parseQrPayload(qr);
+        if (parsed) {
+          prefillFromQr(qr, parsed);
+          return;
+        }
+        // Decoded a QR but it wasn't one of ours — fall through to OCR in
+        // case the image also carries readable card text.
+      }
       const parsed = await runOcr(file, setProgress);
       onParsed(parsed);
     } catch (e) {
@@ -64,7 +104,7 @@ export default function CardScanner({ onParsed, onSkip }: Props) {
   };
 
   const handleQrScanned = (decoded: string) => {
-    const parsed = parseVcard(decoded);
+    const parsed = parseQrPayload(decoded);
     if (!parsed) {
       // Stay on the scanner — user can keep aiming at a different code.
       message.error(
@@ -74,19 +114,7 @@ export default function CardScanner({ onParsed, onSkip }: Props) {
       return;
     }
     setQrOpen(false);
-    // Forward to the same prefill path OCR uses. Missing fields land as
-    // empty strings; the active-event banner auto-prefill (Tier 2) layers
-    // any event context on top in AddNewScreen / ContactForm.
-    onParsed({
-      name: parsed.name ?? "",
-      company: parsed.company ?? "",
-      position: parsed.position ?? "",
-      email: parsed.email ?? "",
-      phone: parsed.phone ?? "",
-      website: parsed.website ?? "",
-      raw: decoded,
-      source: "qr",
-    });
+    prefillFromQr(decoded, parsed);
   };
 
   const handleQrUnavailable = (reason: string) => {
